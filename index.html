@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Cuadrantes de Llamadas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importar SheetJS para leer y escribir Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Importar FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Estilos personalizados para la tabla imitando Excel */
+        .excel-table th {
+            background-color: #008080; /* Color verde azulado de tu foto */
+            color: white;
+            border: 1px solid #005959;
+            text-align: center;
+            font-weight: 600;
+            padding: 8px 12px;
+            white-space: nowrap;
+        }
+        .excel-table td {
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            text-align: center;
+            background-color: white;
+        }
+        .excel-table td.agente-col {
+            background-color: #e6f2f2;
+            text-align: left;
+            font-weight: 500;
+        }
+        .excel-table tr:nth-child(even) td:not(.agente-col):not(.nif-col) {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col">
+
+    <header class="bg-teal-700 text-white shadow-md py-4 px-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-table text-2xl"></i>
+            <h1 class="text-xl font-bold">Automatizador de Cuadrantes</h1>
+        </div>
+        <div class="text-sm opacity-80">
+            Regla activa: ≤ 3 llamadas = "NO"
+        </div>
+    </header>
+
+    <main class="flex-grow p-6 overflow-auto">
+        <div class="max-w-6xl mx-auto space-y-6">
+
+            <!-- PASO 1: Subida de archivo -->
+            <div id="step-1" class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center transition-all">
+                <div class="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    1
+                </div>
+                <h2 class="text-2xl font-semibold mb-2">Sube tu archivo origen</h2>
+                <p class="text-gray-500 mb-6">Selecciona el archivo Excel (ej. <i>datos_extraidos_captura.xlsx</i>) que contiene el registro de llamadas.</p>
+                
+                <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-10 hover:bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .csv">
+                    <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-3"></i>
+                    <p class="font-medium text-gray-700">Haz clic aquí para seleccionar el archivo</p>
+                    <p class="text-sm text-gray-400 mt-1">.xlsx, .xls o .csv</p>
+                </div>
+            </div>
+
+            <!-- PASO 2: Mapeo de columnas (Oculto inicialmente) -->
+            <div id="step-2" class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 hidden transition-all">
+                <div class="flex items-center gap-4 border-b pb-4 mb-6">
+                    <div class="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-bold">2</div>
+                    <h2 class="text-xl font-semibold">Configurar Datos</h2>
+                </div>
+                
+                <p class="text-gray-600 mb-6">Indica de qué mes es el cuadrante y confirma las columnas de fechas y agentes.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mes del Cuadrante:</label>
+                        <input type="month" id="monthPicker" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Columna de Fechas:</label>
+                        <select id="dateColumn" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:ring-teal-500 focus:border-teal-500">
+                            <!-- Opciones generadas por JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Columna de Agentes:</label>
+                        <select id="agentColumn" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:ring-teal-500 focus:border-teal-500">
+                            <!-- Opciones generadas por JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3">
+                    <button onclick="resetApp()" class="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Cancelar</button>
+                    <button onclick="processData()" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generar Tabla
+                    </button>
+                </div>
+            </div>
+
+            <!-- PASO 3: Resultados (Oculto inicialmente) -->
+            <div id="step-3" class="bg-white rounded-xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[70vh]">
+                <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-bold">3</div>
+                        <h2 class="text-xl font-semibold">Tabla Resultado</h2>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="resetApp()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
+                            <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Empezar de nuevo
+                        </button>
+                        <button onclick="exportToExcel()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                            <i class="fa-solid fa-file-arrow-down mr-1"></i> Descargar Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-0 overflow-auto flex-grow" style="background-color: #e5e5e5;">
+                    <table id="resultTable" class="excel-table w-full border-collapse">
+                        <!-- Generado por JS -->
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let rawData = [];
+        let headers = [];
+
+        // Referencias del DOM
+        const fileInput = document.getElementById('fileInput');
+        const step1 = document.getElementById('step-1');
+        const step2 = document.getElementById('step-2');
+        const step3 = document.getElementById('step-3');
+        const monthPicker = document.getElementById('monthPicker');
+        const dateColumnSelect = document.getElementById('dateColumn');
+        const agentColumnSelect = document.getElementById('agentColumn');
+        const resultTable = document.getElementById('resultTable');
+
+        // Escuchar cuando el usuario sube un archivo
+        fileInput.addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = evt.target.result;
+                // Leer el Excel usando SheetJS
+                const workbook = XLSX.read(data, {
+                    type: 'binary',
+                    cellDates: true, // Intentar parsear fechas reales
+                    dateNF: 'dd-mmm' // Formato parecido al de tu captura
+                });
+
+                // Coger la primera hoja
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Convertir a JSON (array de arrays para ver encabezados)
+                const jsonArray = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+                
+                if (jsonArray.length === 0) {
+                    alert("El archivo parece estar vacío.");
+                    return;
+                }
+
+                // Asumimos que la primera fila son los encabezados
+                headers = jsonArray[0];
+                
+                // Extraer los datos reales (cambiado a raw: true para procesar las fechas originales con precisión)
+                rawData = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+
+                setupMappingUI();
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        function setupMappingUI() {
+            // Establecer el mes actual por defecto
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            monthPicker.value = `${year}-${month}`;
+
+            // Limpiar selects
+            dateColumnSelect.innerHTML = '';
+            agentColumnSelect.innerHTML = '';
+
+            // Rellenar con las columnas detectadas
+            headers.forEach(header => {
+                const option1 = document.createElement('option');
+                option1.value = header;
+                option1.textContent = header;
+                dateColumnSelect.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = header;
+                option2.textContent = header;
+                agentColumnSelect.appendChild(option2);
+            });
+
+            // Intentar autoseleccionar si contienen palabras clave
+            headers.forEach((header, index) => {
+                const h = String(header).toLowerCase();
+                if (h.includes('fecha') || h.includes('dia') || h.includes('date')) {
+                    dateColumnSelect.selectedIndex = index;
+                }
+                if (h.includes('agente') || h.includes('nombre') || h.includes('user')) {
+                    agentColumnSelect.selectedIndex = index;
+                }
+            });
+
+            // Cambiar de vista
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+        }
+
+        function processData() {
+            const dateCol = dateColumnSelect.value;
+            const agentCol = agentColumnSelect.value;
+            const selectedMonthStr = monthPicker.value;
+
+            if (!selectedMonthStr) {
+                alert("Por favor, selecciona el mes y año del cuadrante.");
+                return;
+            }
+
+            if (dateCol === agentCol) {
+                alert("La columna de fechas y agentes no puede ser la misma.");
+                return;
+            }
+
+            // Analizar el mes seleccionado
+            const [selYear, selMonth] = selectedMonthStr.split('-').map(Number);
+            
+            // Calcular cuántos días tiene ese mes específico
+            const daysInMonth = new Date(selYear, selMonth, 0).getDate();
+            const monthDays = Array.from({length: daysInMonth}, (_, i) => i + 1);
+
+            // Estructura para contar: { "NombreAgente": { "1": count, "2": count... } }
+            const counts = {};
+
+            // Función auxiliar para transformar datos extraños a Fechas JS
+            const getValidDate = (val) => {
+                if (val instanceof Date) return val;
+                if (typeof val === 'string') {
+                    const d = new Date(val);
+                    if (!isNaN(d.getTime())) return d;
+                    // Intento de parseo por si viene en formato DD/MM/YYYY
+                    const parts = val.split('/');
+                    if (parts.length === 3) {
+                        const parsed = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                        if (!isNaN(parsed.getTime())) return parsed;
+                    }
+                }
+                if (typeof val === 'number') {
+                    // Si viene como número de serie de Excel (por si falla el cellDates)
+                    return new Date((val - (25567 + 2)) * 86400 * 1000);
+                }
+                return null;
+            };
+
+            // Recorrer los datos crudos y contar
+            rawData.forEach(row => {
+                let agent = row[agentCol];
+                let dateVal = row[dateCol];
+
+                // Limpieza básica
+                if (!agent || dateVal === undefined) return; 
+                
+                agent = String(agent).trim();
+                const d = getValidDate(dateVal);
+
+                if (d) {
+                    // Solo contar si la fecha coincide con el mes y año seleccionados
+                    if (d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth) {
+                        const day = d.getDate();
+                        
+                        if (!counts[agent]) {
+                            counts[agent] = {};
+                        }
+                        
+                        if (!counts[agent][day]) {
+                            counts[agent][day] = 0;
+                        }
+
+                        counts[agent][day]++;
+                    }
+                }
+            });
+
+            if (Object.keys(counts).length === 0) {
+                alert(`No se encontraron llamadas para el mes seleccionado (${selectedMonthStr}). Asegúrate de haber elegido el mes correcto.`);
+                // No retornamos para que al menos dibuje la tabla en blanco si lo desean
+            }
+
+            renderTable(counts, monthDays, selMonth);
+        }
+
+        function renderTable(counts, daysArray, monthNumber) {
+            // Nombres cortos de meses como en tu ejemplo
+            const monthNames = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+            const monthName = monthNames[monthNumber - 1];
+            
+            let theadHTML = `
+                <thead>
+                    <tr>
+                        <th class="w-24">NIF</th>
+                        <th class="w-64">AGENTE</th>
+            `;
+
+            // Construir cabeceras de días (ej: 01-ago, 02-ago...)
+            daysArray.forEach(day => {
+                const dayStr = String(day).padStart(2, '0');
+                theadHTML += `<th>${dayStr}-${monthName}</th>`;
+            });
+            theadHTML += `</tr></thead>`;
+
+            let tbodyHTML = `<tbody>`;
+            
+            // Ordenar agentes alfabéticamente
+            const agents = Object.keys(counts).sort();
+
+            agents.forEach(agent => {
+                tbodyHTML += `<tr>`;
+                tbodyHTML += `<td class="nif-col bg-[#e6f2f2]"></td>`; 
+                tbodyHTML += `<td class="agente-col">${agent}</td>`;
+                
+                daysArray.forEach(day => {
+                    const count = counts[agent][day] || 0;
+                    
+                    // REGLA PRINCIPAL: Si es <= 3, poner "NO". Si no, poner cantidad.
+                    if (count <= 3) {
+                        tbodyHTML += `<td class="text-gray-400 text-sm">NO</td>`;
+                    } else {
+                        tbodyHTML += `<td class="font-bold text-teal-800">${count}</td>`;
+                    }
+                });
+                
+                tbodyHTML += `</tr>`;
+            });
+
+            // Añadir filas en blanco extras para simular la plantilla
+            for(let i=0; i<5; i++){
+                tbodyHTML += `<tr><td class="bg-[#e6f2f2]"></td><td class="agente-col"></td>`;
+                daysArray.forEach(() => { tbodyHTML += `<td></td>`; });
+                tbodyHTML += `</tr>`;
+            }
+
+            tbodyHTML += `</tbody>`;
+
+            resultTable.innerHTML = theadHTML + tbodyHTML;
+
+            // Cambiar de vista
+            step2.classList.add('hidden');
+            step3.classList.remove('hidden');
+        }
+
+        function exportToExcel() {
+            // Cogemos la tabla HTML generada y la convertimos a un libro de Excel
+            const wb = XLSX.utils.table_to_book(document.getElementById('resultTable'), {sheet: "Cuadrante"});
+            
+            // Forzar descarga
+            XLSX.writeFile(wb, "Cuadrante_Llamadas_Generado.xlsx");
+        }
+
+        function resetApp() {
+            fileInput.value = '';
+            rawData = [];
+            headers = [];
+            
+            step3.classList.add('hidden');
+            step2.classList.add('hidden');
+            step1.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
