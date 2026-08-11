@@ -6,7 +6,7 @@
     <title>Generador de Cuadrantes de Llamadas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Añadido Chart.js para las gráficas analíticas -->
+    <!-- Chart.js para las gráficas analíticas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -114,7 +114,7 @@
                 <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold shadow-inner">
                     1
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Sube tus archivos de datos</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Selecciona tus archivos de datos</h2>
                 <p class="text-gray-500 mb-6 text-sm">Necesitamos el listado maestro de agentes y el histórico de llamadas.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -167,7 +167,7 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 items-end">
                     <div class="flex flex-col justify-end h-full">
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Mes del Cuadrante:</label>
                         <input type="month" id="monthPicker" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
@@ -233,10 +233,9 @@
                 </div>
             </div>
 
-            <!-- PASO INTERMEDIO: Pantalla de Carga (Versión Cinemática) -->
             <div id="step-loading" class="bg-slate-900 rounded-2xl shadow-2xl border border-teal-500/30 p-12 text-center hidden transition-all max-w-4xl mx-auto my-8 flex-col items-center justify-center min-h-[50vh] relative overflow-hidden">
                 <!-- Fondo de cuadrícula cibernética -->
-                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDM5LjVoNDBWMGgtMXYzOS41SDB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] opacity-20"></div>
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDM5LjףnakgwIDM5LjVoNDBWMGgtMXYzOS41SDB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] opacity-20"></div>
                 
                 <!-- Escáner láser -->
                 <div class="absolute left-0 w-full h-[2px] bg-teal-400 shadow-[0_0_15px_#2dd4bf] animate-[scan_2.5s_ease-in-out_infinite] z-20"></div>
@@ -321,7 +320,6 @@
                 </div>
             </div>
 
-            <!-- PASO 4: Analítica Interactiva (Oculto inicialmente) -->
             <div id="step-4" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)]">
                 <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
                     <div class="flex items-center gap-4">
@@ -396,7 +394,7 @@
                 <div>
                     <h4 class="text-lg font-bold text-teal-800 border-b border-teal-100 pb-2 mb-3">2. Instrucciones Paso a Paso</h4>
                     
-                    <p class="font-bold text-gray-800 mb-1"><span class="bg-teal-100 text-teal-800 px-2 rounded mr-1">1</span> Sube tus archivos de datos</p>
+                    <p class="font-bold text-gray-800 mb-1"><span class="bg-teal-100 text-teal-800 px-2 rounded mr-1">1</span> Selecciona tus archivos de datos</p>
                     <p class="mb-2">El primer paso para utilizar la herramienta es proporcionar los datos fuente. La aplicación requiere dos archivos fundamentales:</p>
                     <ul class="list-disc pl-5 mb-4 space-y-1">
                         <li><strong>1. Fichero AGENTES:</strong> Es el documento maestro que contiene la lista oficial de todos los empleados o agentes activos. Esto es crucial para que el sistema sepa a quién debe evaluar.</li>
@@ -426,11 +424,17 @@
                     <h4 class="text-lg font-bold text-teal-800 border-b border-teal-100 pb-2 mb-3">3. Herramientas de Análisis</h4>
                     <p class="font-bold text-gray-800 mb-1">Análisis Interactivo por Agente</p>
                     <p class="mb-2">Más allá del cuadrante global, la aplicación ofrece una vista detallada individual. En la sección "Análisis Interactivo por Agente", podrás:</p>
-                    <ol class="list-decimal pl-5 space-y-1">
+                    <ol class="list-decimal pl-5 space-y-1 mb-4">
                         <li>Seleccionar a un agente específico de una lista desplegable.</li>
                         <li>Visualizar sus estadísticas individuales.</li>
                         <li>Revisar las descripciones detalladas de su actividad, permitiendo un monitoreo exhaustivo sin necesidad de buscar en todo el cuadrante general.</li>
                     </ol>
+                    <p class="font-bold text-gray-800 mb-1">Exportación de Estudios Analíticos</p>
+                    <p class="mb-2">La plataforma permite descargar reportes estadísticos avanzados en formato Excel para realizar estudios más profundos o tablas dinámicas:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Exportación Individual:</strong> Dentro de la ficha de cada agente, el botón "Exportar a Excel" generará un libro con el desglose diario de sus llamadas, clasificando y totalizando las cantidades según cada "Descripción/Motivo" único registrado en el mes.</li>
+                        <li><strong>Exportación Masiva:</strong> En la cabecera de la sección analítica, el botón "Exportar Todos" compilará la misma estructura matricial detallada para <em>todos los agentes</em>, creando automáticamente una hoja (pestaña) independiente para cada uno dentro de un único archivo Excel.</li>
+                    </ul>
                 </div>
 
                 <div>
@@ -471,6 +475,7 @@
         let unmatchedTempDescriptions = {};
         let unmatchedTempTotal = 0;
         let currentChart = null;
+        let currentDescChart = null;
         let currentSelectedAgent = null;
 
         // --- FUNCIONES DE CRUCE INTELIGENTE (POWERSHELL LOGIC) ---
@@ -830,7 +835,6 @@
                 progressBar.style.width = `${progress}%`;
                 progressText.textContent = `${progress}%`;
 
-                // Cambiar el texto explicativo según avanza
                 if (progress === 10) stepText.textContent = steps[0];
                 if (progress === 30) stepText.textContent = steps[1];
                 if (progress === 50) stepText.textContent = steps[2];
@@ -843,7 +847,6 @@
             }, 100);
             // --- FIN ANIMACIÓN ---
 
-            // Configurar el timeout de 5 segundos (5000 milisegundos)
             setTimeout(() => {
                 const [selYear, selMonth] = selectedMonthStr.split('-').map(Number);
                 currentMonthNum = selMonth;
@@ -863,135 +866,129 @@
                 const nifColIdx = nifCol ? agentsHeaders.indexOf(nifCol) : -1;
 
                 // 1. Extraer Agentes del Fichero Maestro
-            const agentRange = XLSX.utils.decode_range(agentInfo.sheet['!ref']);
-            for (let r = agentInfo.row + 1; r <= agentRange.e.r; r++) {
-                const nameCell = agentInfo.sheet[XLSX.utils.encode_cell({r: r, c: agentInfo.col})];
-                if (nameCell && nameCell.v) {
-                    const agentName = String(nameCell.v).trim();
-                    let nifVal = '';
-                    if (nifColIdx !== -1) {
-                        const nCell = agentInfo.sheet[XLSX.utils.encode_cell({r: r, c: nifColIdx})];
-                        if (nCell && nCell.v) nifVal = String(nCell.v).trim();
-                    }
-                    
-                    masterAgents.push({
-                        name: agentName,
-                        key: getPersonKey(agentName),
-                        nif: nifVal
-                    });
-
-                    // Inicializar en 0 para todos los días
-                    processedCounts[agentName] = {};
-                    agentNifs[agentName] = nifVal;
-                    agentDescriptions[agentName] = [];
-                }
-            }
-
-            const getValidDayNumber = (val) => {
-                if (val === null || val === undefined) return null;
-                let d = null;
-
-                if (val instanceof Date) {
-                    d = val;
-                } else if (typeof val === 'number') {
-                    // Conversión de fecha serie de Excel
-                    d = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
-                } else if (typeof val === 'string') {
-                    val = val.trim();
-                    if (!val) return null;
-                    const parsed = new Date(val);
-                    if (!isNaN(parsed.getTime())) {
-                        d = parsed;
-                    } else {
-                        // Formato DD/MM/YYYY
-                        const parts = val.split(/[\/\-\.]/);
-                        if (parts.length === 3) {
-                            const p0 = parseInt(parts[0], 10);
-                            const p1 = parseInt(parts[1], 10);
-                            const p2 = parseInt(parts[2], 10);
-                            if (p2 > 1000) d = new Date(p2, p1 - 1, p0);
-                            else if (p0 > 1000) d = new Date(p0, p1 - 1, p2);
+                const agentRange = XLSX.utils.decode_range(agentInfo.sheet['!ref']);
+                for (let r = agentInfo.row + 1; r <= agentRange.e.r; r++) {
+                    const nameCell = agentInfo.sheet[XLSX.utils.encode_cell({r: r, c: agentInfo.col})];
+                    if (nameCell && nameCell.v) {
+                        const agentName = String(nameCell.v).trim();
+                        let nifVal = '';
+                        if (nifColIdx !== -1) {
+                            const nCell = agentInfo.sheet[XLSX.utils.encode_cell({r: r, c: nifColIdx})];
+                            if (nCell && nCell.v) nifVal = String(nCell.v).trim();
                         }
-                    }
-                }
-
-                if (d && !isNaN(d.getTime())) {
-                    if (d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth) {
-                        return d.getDate();
-                    }
-                }
-                return null;
-            };
-
-            // 2. Cruzar con el Fichero de Llamadas
-            currentSheetData.forEach(row => {
-                let callAgent = row[agentCol];
-                let dateVal = row[dateCol];
-                let callDesc = descCol && row[descCol] ? String(row[descCol]).trim() : '';
-
-                if (!callAgent || dateVal === undefined) return;
-                
-                callAgent = String(callAgent).trim();
-                const day = getValidDayNumber(dateVal);
-
-                if (day !== null) {
-                    const callKey = getPersonKey(callAgent);
-                    let matchedMasterName = null;
-
-                    // Buscar el agente en la lista maestra
-                    for (const master of masterAgents) {
-                        if (testPersonMatch(master.key, callKey)) {
-                            matchedMasterName = master.name;
-                            break;
-                        }
-                    }
-
-                    if (matchedMasterName) {
-                        if (!processedCounts[matchedMasterName][day]) {
-                            processedCounts[matchedMasterName][day] = 0;
-                        }
-                        processedCounts[matchedMasterName][day]++;
-                        if(callDesc) agentDescriptions[matchedMasterName].push({day: day, desc: callDesc});
-                        totalCallsCount++;
-                    } else {
-                        // Si no encuentra al agente, lo añade a la lista de excluidos
-                        unmatchedAgents.add(callAgent);
                         
-                        // Guardar temporalmente sus llamadas por si el usuario decide incluirlos
-                        if (!unmatchedTempCounts[callAgent]) {
-                            unmatchedTempCounts[callAgent] = {};
-                            unmatchedTempDescriptions[callAgent] = [];
-                        }
-                        if (!unmatchedTempCounts[callAgent][day]) {
-                            unmatchedTempCounts[callAgent][day] = 0;
-                        }
-                        unmatchedTempCounts[callAgent][day]++;
-                        if(callDesc) unmatchedTempDescriptions[callAgent].push({day: day, desc: callDesc});
-                        unmatchedTempTotal++;
+                        masterAgents.push({
+                            name: agentName,
+                            key: getPersonKey(agentName),
+                            nif: nifVal
+                        });
+
+                        processedCounts[agentName] = {};
+                        agentNifs[agentName] = nifVal;
+                        agentDescriptions[agentName] = [];
                     }
                 }
-            });
 
-            const totalAgents = Object.keys(processedCounts).length;
+                const getValidDayNumber = (val) => {
+                    if (val === null || val === undefined) return null;
+                    let d = null;
 
-            if (totalAgents === 0) {
-                showToast(`No se encontraron agentes válidos en el listado.`, 'error');
-                return;
-            } else {
-                showToast(`Cuadrante generado cruzando llamadas para ${totalAgents} agentes.`, 'success');
-            }
+                    if (val instanceof Date) {
+                        d = val;
+                    } else if (typeof val === 'number') {
+                        d = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
+                    } else if (typeof val === 'string') {
+                        val = val.trim();
+                        if (!val) return null;
+                        const parsed = new Date(val);
+                        if (!isNaN(parsed.getTime())) {
+                            d = parsed;
+                        } else {
+                            const parts = val.split(/[\/\-\.]/);
+                            if (parts.length === 3) {
+                                const p0 = parseInt(parts[0], 10);
+                                const p1 = parseInt(parts[1], 10);
+                                const p2 = parseInt(parts[2], 10);
+                                if (p2 > 1000) d = new Date(p2, p1 - 1, p0);
+                                else if (p0 > 1000) d = new Date(p0, p1 - 1, p2);
+                            }
+                        }
+                    }
 
-            if (unmatchedAgents.size > 0) {
-                const listEl = document.getElementById('unmatchedList');
-                listEl.innerHTML = '';
-                Array.from(unmatchedAgents).sort().forEach(agent => {
-                    const li = document.createElement('li');
-                    li.textContent = agent;
-                    listEl.appendChild(li);
+                    if (d && !isNaN(d.getTime())) {
+                        if (d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth) {
+                            return d.getDate();
+                        }
+                    }
+                    return null;
+                };
+
+                // 2. Cruzar con el Fichero de Llamadas
+                currentSheetData.forEach(row => {
+                    let callAgent = row[agentCol];
+                    let dateVal = row[dateCol];
+                    let callDesc = descCol && row[descCol] ? String(row[descCol]).trim() : '';
+
+                    if (!callAgent || dateVal === undefined) return;
+                    
+                    callAgent = String(callAgent).trim();
+                    const day = getValidDayNumber(dateVal);
+
+                    if (day !== null) {
+                        const callKey = getPersonKey(callAgent);
+                        let matchedMasterName = null;
+
+                        for (const master of masterAgents) {
+                            if (testPersonMatch(master.key, callKey)) {
+                                matchedMasterName = master.name;
+                                break;
+                            }
+                        }
+
+                        if (matchedMasterName) {
+                            if (!processedCounts[matchedMasterName][day]) {
+                                processedCounts[matchedMasterName][day] = 0;
+                            }
+                            processedCounts[matchedMasterName][day]++;
+                            if(callDesc) agentDescriptions[matchedMasterName].push({day: day, desc: callDesc});
+                            totalCallsCount++;
+                        } else {
+                            unmatchedAgents.add(callAgent);
+                            
+                            if (!unmatchedTempCounts[callAgent]) {
+                                unmatchedTempCounts[callAgent] = {};
+                                unmatchedTempDescriptions[callAgent] = [];
+                            }
+                            if (!unmatchedTempCounts[callAgent][day]) {
+                                unmatchedTempCounts[callAgent][day] = 0;
+                            }
+                            unmatchedTempCounts[callAgent][day]++;
+                            if(callDesc) unmatchedTempDescriptions[callAgent].push({day: day, desc: callDesc});
+                            unmatchedTempTotal++;
+                        }
+                    }
                 });
-                document.getElementById('unmatchedModal').classList.remove('hidden');
-            }
-            
+
+                const totalAgents = Object.keys(processedCounts).length;
+
+                if (totalAgents === 0) {
+                    showToast(`No se encontraron agentes válidos en el listado.`, 'error');
+                    return;
+                } else {
+                    showToast(`Cuadrante generado cruzando llamadas para ${totalAgents} agentes.`, 'success');
+                }
+
+                if (unmatchedAgents.size > 0) {
+                    const listEl = document.getElementById('unmatchedList');
+                    listEl.innerHTML = '';
+                    Array.from(unmatchedAgents).sort().forEach(agent => {
+                        const li = document.createElement('li');
+                        li.textContent = agent;
+                        listEl.appendChild(li);
+                    });
+                    document.getElementById('unmatchedModal').classList.remove('hidden');
+                }
+                
                 const thVal = document.getElementById('thresholdInput').value;
                 const thTxt = document.getElementById('thresholdText').value;
                 const aboveType = document.getElementById('aboveThresholdType').value;
@@ -1005,19 +1002,17 @@
                 document.getElementById('currentRuleText').textContent = ruleDesc;
                 document.getElementById('ruleBadge').classList.remove('hidden');
 
-                // Reiniciar animación para la próxima vez
                 progressBar.style.width = `0%`;
                 progressText.textContent = `0%`;
                 stepText.textContent = "Iniciando protocolo de cruce...";
 
-                // Ocultar la pantalla de carga antes de renderizar (renderTable mostrará el paso 3)
                 stepLoading.classList.remove('flex');
                 stepLoading.classList.add('hidden');
 
                 renderTable(daysArray, selMonth);
                 updateKPIs(totalAgents, totalCallsCount);
                 
-            }, 5000); // Fin del timeout de 5 segundos
+            }, 5000);
         }
 
         function renderTable(daysArray, monthNumber) {
@@ -1029,7 +1024,6 @@
             const aboveType = document.getElementById('aboveThresholdType').value;
             const aboveText = document.getElementById('aboveThresholdText').value;
 
-            // Extraer el año para calcular los fines de semana
             const selectedMonthStr = document.getElementById('monthPicker').value;
             const selYear = selectedMonthStr ? parseInt(selectedMonthStr.split('-')[0], 10) : new Date().getFullYear();
 
@@ -1058,15 +1052,14 @@
                 daysArray.forEach(day => {
                     const count = processedCounts[agent][day] || 0;
                     
-                    // Determinar si es fin de semana (sábado = 6, domingo = 0)
                     const currentDate = new Date(selYear, monthNumber - 1, day);
-                    const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+                    const dayOfWeek = currentDate.getDay(); // Sábado = 6, Domingo = 0
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-                    if (count <= thresholdLimit) {
-                        const displayValue = isWeekend ? "" : labelBelow;
-                        // Añadimos un sutil fondo gris a los fines de semana vacíos para mejor visualización
-                        const bgClass = isWeekend ? "bg-gray-100/50" : "";
-                        tbodyHTML += `<td class="text-gray-400 text-xs font-normal ${bgClass}">${displayValue}</td>`;
+                    if (isWeekend) {
+                        tbodyHTML += `<td class="bg-gray-100/60"></td>`;
+                    } else if (count <= thresholdLimit) {
+                        tbodyHTML += `<td class="text-gray-400 text-xs font-normal">${labelBelow}</td>`;
                     } else {
                         let displayVal = "";
                         if (aboveType === 'count') {
@@ -1083,7 +1076,6 @@
                 tbodyHTML += `</tr>`;
             });
 
-            // Filas de relleno estéticas
             for (let i = 0; i < 4; i++) {
                 tbodyHTML += `<tr class="empty-row"><td class="sticky-col nif-col"></td><td class="sticky-col agente-col"></td>`;
                 daysArray.forEach(() => { tbodyHTML += `<td></td>`; });
@@ -1118,19 +1110,16 @@
         function includeUnmatched() {
             document.getElementById('unmatchedModal').classList.add('hidden');
             
-            // Combinar los agentes no encontrados con el procesado principal
             Object.keys(unmatchedTempCounts).forEach(agent => {
                 processedCounts[agent] = unmatchedTempCounts[agent];
-                agentNifs[agent] = ""; // Sin NIF ya que no estaban en el listado maestro
+                agentNifs[agent] = ""; 
                 agentDescriptions[agent] = unmatchedTempDescriptions[agent] || [];
             });
             
-            // Recalcular totales sumando los temporales
             const totalCallsEl = document.getElementById('kpiTotalCalls');
             const newTotalCalls = parseInt(totalCallsEl.textContent, 10) + unmatchedTempTotal;
             const newTotalAgents = Object.keys(processedCounts).length;
             
-            // Volver a renderizar tabla y actualizar KPIs
             renderTable(daysArray, currentMonthNum);
             updateKPIs(newTotalAgents, newTotalCalls);
             
@@ -1155,10 +1144,8 @@
 
         function exportToExcel() {
             try {
-                // Hoja 1: Cuadrante de Llamadas
                 const wb = XLSX.utils.table_to_book(document.getElementById('resultTable'), { sheet: "Cuadrante" });
                 
-                // Hoja 2: Listado de Agentes y Estadísticas Generales
                 const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
                 const statsData = [
                     ["NIF", "Agente", "Total Llamadas Mes", "Días con Llamadas (>0)", "Días Activos (> Umbral)", "Días Bajo Umbral (≤ Umbral)", "Promedio Llamadas / Día con Actividad"]
@@ -1233,6 +1220,7 @@
             unmatchedTempDescriptions = {};
             unmatchedTempTotal = 0;
             if(currentChart) currentChart.destroy();
+            if(currentDescChart) currentDescChart.destroy();
             currentSelectedAgent = null;
 
             document.getElementById('searchInput').value = '';
@@ -1241,7 +1229,6 @@
             document.getElementById('step-4').classList.add('hidden');
             step3.classList.add('hidden');
             
-            // Asegurarnos de limpiar también la pantalla de carga
             const stepLoading = document.getElementById('step-loading');
             stepLoading.classList.remove('flex');
             stepLoading.classList.add('hidden');
@@ -1325,6 +1312,17 @@
                 chartData.push(count);
             });
 
+            // Agrupar descripciones para la tabla y la gráfica circular
+            const descCounts = {};
+            descs.forEach(d => {
+                const descText = d.desc.trim() || 'Sin descripción';
+                descCounts[descText] = (descCounts[descText] || 0) + 1;
+            });
+            const sortedDescs = Object.entries(descCounts).sort((a, b) => b[1] - a[1]);
+
+            const pieLabels = sortedDescs.map(item => item[0]);
+            const pieData = sortedDescs.map(item => item[1]);
+
             let html = `
                 <div class="flex justify-between items-start border-b border-gray-200 pb-4 shrink-0">
                     <div>
@@ -1351,34 +1349,36 @@
                     </div>
                 </div>
 
-                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm shrink-0">
-                    <h4 class="text-sm font-bold text-gray-700 mb-4"><i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>Evolución Diaria (Llamadas)</h4>
-                    <div class="h-48 w-full relative">
-                        <canvas id="agentChart"></canvas>
+                <!-- Gráficas (Barras y Circular de Porcentajes) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 shrink-0">
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                        <h4 class="text-sm font-bold text-gray-700 mb-4"><i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>Evolución Diaria (Llamadas)</h4>
+                        <div class="h-48 w-full relative">
+                            <canvas id="agentChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                        <h4 class="text-sm font-bold text-gray-700 mb-4"><i class="fa-solid fa-chart-pie text-teal-500 mr-2"></i>Distribución por Descripciones (%)</h4>
+                        <div class="h-48 w-full relative flex items-center justify-center">
+                            <canvas id="descChart"></canvas>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col min-h-[250px] flex-grow">
-                    <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl shrink-0">
+                    <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl shrink-0 flex justify-between items-center">
                         <h4 class="text-sm font-bold text-gray-700"><i class="fa-solid fa-list-ul text-blue-400 mr-2"></i>Descripciones de Transacciones (${descs.length})</h4>
                     </div>
                     <div class="p-0 overflow-y-auto flex-grow bg-gray-50/50">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead class="bg-white text-gray-500 text-xs uppercase sticky top-0 shadow-sm">
                                 <tr>
-                                    <th class="p-3 border-b border-gray-200 w-24 text-center">Cantidad</th>
+                                    <th class="p-3 border-b border-gray-200 w-28 text-center">Cantidad</th>
                                     <th class="p-3 border-b border-gray-200">Descripción / Motivo</th>
                                 </tr>
                             </thead>
                             <tbody>
             `;
-
-            const descCounts = {};
-            descs.forEach(d => {
-                const descText = d.desc.trim() || 'Sin descripción';
-                descCounts[descText] = (descCounts[descText] || 0) + 1;
-            });
-            const sortedDescs = Object.entries(descCounts).sort((a, b) => b[1] - a[1]);
 
             if (sortedDescs.length === 0) {
                 html += `<tr><td colspan="2" class="p-8 text-center text-gray-400 italic"><i class="fa-solid fa-folder-open text-2xl mb-2 block"></i>No hay descripciones registradas</td></tr>`;
@@ -1419,6 +1419,49 @@
                     animation: { duration: 500 }
                 }
             });
+
+            if (currentDescChart) currentDescChart.destroy();
+            const ctxPie = document.getElementById('descChart').getContext('2d');
+            const backgroundColors = [
+                '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
+                '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+            ];
+
+            currentDescChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: pieLabels,
+                    datasets: [{
+                        data: pieData,
+                        backgroundColor: pieLabels.map((_, i) => backgroundColors[i % backgroundColors.length]),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 10 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const value = context.raw;
+                                    const percentage = sum > 0 ? ((value / sum) * 100).toFixed(1) + '%' : '0%';
+                                    return ` ${context.label}: ${value} (${percentage})`;
+                                }
+                            }
+                        }
+                    },
+                    animation: { duration: 500 }
+                }
+            });
         }
 
         function exportCurrentAgentStats() {
@@ -1433,10 +1476,8 @@
                 let totalCalls = 0;
                 let activeDays = 0;
                 
-                // Extraer todas las descripciones únicas del agente en todo el mes para crear las columnas
                 const uniqueDescs = [...new Set(descs.map(d => d.desc.trim() || 'Sin descripción'))].sort();
                 
-                // Cabeceras dinámicas: Día, Total Llamadas, Desc 1, Desc 2, Desc 3...
                 const dailyHeaders = ["Día", "Total Llamadas", ...uniqueDescs];
                 const dailyData = [dailyHeaders];
                 
@@ -1445,17 +1486,15 @@
                     totalCalls += count;
                     if (count > thresholdLimit) activeDays++;
 
-                    // Contar cuántas veces aparece cada descripción específicamente en este día
                     const dailyDescsCounts = {};
                     descs.filter(d => d.day === day).forEach(d => {
                         const descStr = d.desc.trim() || 'Sin descripción';
                         dailyDescsCounts[descStr] = (dailyDescsCounts[descStr] || 0) + 1;
                     });
 
-                    // Construir la fila con los recuentos exactos bajo cada columna
                     const row = [day, count];
                     uniqueDescs.forEach(desc => {
-                        row.push(dailyDescsCounts[desc] || 0); // Pone 0 si ese día no hizo ese tipo de llamada
+                        row.push(dailyDescsCounts[desc] || 0);
                     });
                     
                     dailyData.push(row);
@@ -1477,7 +1516,6 @@
                 const wsData1 = summaryData.concat(dailyData);
                 const ws1 = XLSX.utils.aoa_to_sheet(wsData1);
                 
-                // Procesar descripciones totales para la segunda hoja
                 const descCounts = {};
                 descs.forEach(d => {
                     const descText = d.desc.trim() || 'Sin descripción';
@@ -1493,8 +1531,8 @@
                 
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws1, "Estudio Detallado");
+                XLSX.utils.book_append_sheet(wb, ws2, "Resumen Descripciones");
                 
-                // Nombre de archivo seguro
                 const safeName = agent.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
                 XLSX.writeFile(wb, `Estudio_Analitico_${safeName}.xlsx`);
                 
@@ -1516,7 +1554,6 @@
             
             showToast("Generando exportación masiva. Esto puede tardar unos segundos...", "success");
 
-            // Timeout para dejar que la interfaz se actualice antes de congelar el navegador procesando
             setTimeout(() => {
                 try {
                     const wb = XLSX.utils.book_new();
@@ -1567,7 +1604,6 @@
                         const wsData = summaryData.concat(dailyData);
                         const ws = XLSX.utils.aoa_to_sheet(wsData);
                         
-                        // Generar un nombre de hoja válido y único para Excel (máx 31 caracteres)
                         let safeName = agent.replace(/[^a-zA-Z0-9]/gi, '_').substring(0, 31);
                         if (!safeName) safeName = "Agente";
                         
