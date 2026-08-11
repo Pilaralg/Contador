@@ -108,7 +108,7 @@
     </div>
 
     <main class="flex-grow p-4 md:p-6 overflow-y-auto">
-        <div class="max-w-7xl mx-auto space-y-6">
+        <div class="w-full px-2 md:px-4 space-y-6">
 
             <div id="step-1" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 text-center transition-all max-w-4xl mx-auto my-8">
                 <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold shadow-inner">
@@ -269,7 +269,7 @@
                 </div>
             </div>
 
-            <div id="step-3" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)]">
+            <div id="step-3" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)] w-full">
 
                 <!-- Header de Resultados y KPIs -->
                 <div class="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-wrap items-center justify-between gap-4 shrink-0">
@@ -320,7 +320,7 @@
                 </div>
             </div>
 
-            <div id="step-4" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)]">
+            <div id="step-4" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)] w-full">
                 <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
                     <div class="flex items-center gap-4">
                         <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> Análisis Interactivo por Agente</h2>
@@ -371,7 +371,6 @@
         </div>
     </div>
 
-    <!-- Modal de Manual de Usuario -->
     <div id="manualModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col max-h-[90vh] border border-gray-100">
             <div class="bg-teal-800 p-5 flex items-center justify-between text-white shrink-0">
@@ -426,14 +425,14 @@
                     <p class="mb-2">Más allá del cuadrante global, la aplicación ofrece una vista detallada individual. En la sección "Análisis Interactivo por Agente", podrás:</p>
                     <ol class="list-decimal pl-5 space-y-1 mb-4">
                         <li>Seleccionar a un agente específico de una lista desplegable.</li>
-                        <li>Visualizar sus estadísticas individuales.</li>
-                        <li>Revisar las descripciones detalladas de su actividad, permitiendo un monitoreo exhaustivo sin necesidad de buscar en todo el cuadrante general.</li>
+                        <li>Visualizar sus estadísticas individuales y gráficos interactivos con porcentajes de distribución.</li>
+                        <li>Revisar las descripciones detalladas de su actividad ordenadas de mayor a menor frecuencia, permitiendo un monitoreo exhaustivo sin necesidad de buscar en todo el cuadrante general.</li>
                     </ol>
                     <p class="font-bold text-gray-800 mb-1">Exportación de Estudios Analíticos</p>
                     <p class="mb-2">La plataforma permite descargar reportes estadísticos avanzados en formato Excel para realizar estudios más profundos o tablas dinámicas:</p>
                     <ul class="list-disc pl-5 space-y-2">
-                        <li><strong>Exportación Individual:</strong> Dentro de la ficha de cada agente, el botón "Exportar a Excel" generará un libro con el desglose diario de sus llamadas, clasificando y totalizando las cantidades según cada "Descripción/Motivo" único registrado en el mes.</li>
-                        <li><strong>Exportación Masiva:</strong> En la cabecera de la sección analítica, el botón "Exportar Todos" compilará la misma estructura matricial detallada para <em>todos los agentes</em>, creando automáticamente una hoja (pestaña) independiente para cada uno dentro de un único archivo Excel.</li>
+                        <li><strong>Exportación Individual:</strong> Dentro de la ficha de cada agente, el botón "Exportar a Excel" generará un libro con el desglose diario de sus llamadas en formato de matriz de columnas por cada "Descripción/Motivo" único registrado en el mes.</li>
+                        <li><strong>Exportación Masiva ("Exportar Todos"):</strong> En la cabecera de la sección analítica, el botón compilará la misma estructura matricial detallada para <em>todos los agentes</em>, creando automáticamente una hoja (pestaña) independiente para cada uno dentro de un único archivo Excel.</li>
                     </ul>
                 </div>
 
