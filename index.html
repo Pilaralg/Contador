@@ -885,6 +885,10 @@
             const aboveType = document.getElementById('aboveThresholdType').value;
             const aboveText = document.getElementById('aboveThresholdText').value;
 
+            // Extraer el año para calcular los fines de semana
+            const selectedMonthStr = document.getElementById('monthPicker').value;
+            const selYear = selectedMonthStr ? parseInt(selectedMonthStr.split('-')[0], 10) : new Date().getFullYear();
+
             let theadHTML = `
                 <thead>
                     <tr>
@@ -909,9 +913,16 @@
 
                 daysArray.forEach(day => {
                     const count = processedCounts[agent][day] || 0;
+                    
+                    // Determinar si es fin de semana (sábado = 6, domingo = 0)
+                    const currentDate = new Date(selYear, monthNumber - 1, day);
+                    const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
 
                     if (count <= thresholdLimit) {
-                        tbodyHTML += `<td class="text-gray-400 text-xs font-normal">${labelBelow}</td>`;
+                        const displayValue = isWeekend ? "" : labelBelow;
+                        // Añadimos un sutil fondo gris a los fines de semana vacíos para mejor visualización
+                        const bgClass = isWeekend ? "bg-gray-100/50" : "";
+                        tbodyHTML += `<td class="text-gray-400 text-xs font-normal ${bgClass}">${displayValue}</td>`;
                     } else {
                         let displayVal = "";
                         if (aboveType === 'count') {
