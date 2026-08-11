@@ -263,6 +263,29 @@
         </div>
     </main>
 
+    <div id="unmatchedModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[80vh] border border-gray-100">
+            <div class="bg-amber-500 p-4 flex items-center justify-between text-white shrink-0">
+                <h3 class="font-bold flex items-center gap-2 text-lg">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Aviso de Seguridad
+                </h3>
+                <button onclick="document.getElementById('unmatchedModal').classList.add('hidden')" class="text-white hover:text-amber-200 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow">
+                <p class="text-gray-700 text-sm mb-4">Se han encontrado llamadas registradas para los siguientes nombres en el fichero de transacciones, pero <strong>no aparecen en el fichero maestro de agentes</strong>. Han sido excluidos del cuadrante:</p>
+                <ul id="unmatchedList" class="list-disc pl-5 text-sm text-gray-700 space-y-1.5 bg-amber-50/50 p-4 rounded-xl border border-amber-100 font-medium">
+                    <!-- Los elementos <li> se generan por JS -->
+                </ul>
+            </div>
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0">
+                <button onclick="document.getElementById('unmatchedModal').classList.add('hidden')" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium transition-colors shadow-sm">Ignorar</button>
+                <button onclick="includeUnmatched()" class="px-5 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 text-sm font-medium transition-colors shadow-sm flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Incluir Agentes</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let rawWorkbook = null; // Calls workbook
         let agentsWorkbook = null;
@@ -274,6 +297,8 @@
         let agentNifs = {};
         let daysArray = [];
         let currentMonthNum = 1;
+        let unmatchedTempCounts = {};
+        let unmatchedTempTotal = 0;
 
         // --- FUNCIONES DE CRUCE INTELIGENTE (POWERSHELL LOGIC) ---
         function normalizeText(text) {
@@ -562,7 +587,10 @@
 
             processedCounts = {};
             agentNifs = {};
+            unmatchedTempCounts = {};
+            unmatchedTempTotal = 0;
             let totalCallsCount = 0;
+            let unmatchedAgents = new Set(); // Nuevo: Set para guardar agentes no encontrados
 
             // 1. Extraer Agentes del Fichero Maestro
             const masterAgents = [];
@@ -660,6 +688,19 @@
                         }
                         processedCounts[matchedMasterName][day]++;
                         totalCallsCount++;
+                    } else {
+                        // Si no encuentra al agente, lo añade a la lista de excluidos
+                        unmatchedAgents.add(callAgent);
+                        
+                        // Guardar temporalmente sus llamadas por si el usuario decide incluirlos
+                        if (!unmatchedTempCounts[callAgent]) {
+                            unmatchedTempCounts[callAgent] = {};
+                        }
+                        if (!unmatchedTempCounts[callAgent][day]) {
+                            unmatchedTempCounts[callAgent][day] = 0;
+                        }
+                        unmatchedTempCounts[callAgent][day]++;
+                        unmatchedTempTotal++;
                     }
                 }
             });
@@ -671,6 +712,17 @@
                 return;
             } else {
                 showToast(`Cuadrante generado cruzando llamadas para ${totalAgents} agentes.`, 'success');
+            }
+
+            if (unmatchedAgents.size > 0) {
+                const listEl = document.getElementById('unmatchedList');
+                listEl.innerHTML = '';
+                Array.from(unmatchedAgents).sort().forEach(agent => {
+                    const li = document.createElement('li');
+                    li.textContent = agent;
+                    listEl.appendChild(li);
+                });
+                document.getElementById('unmatchedModal').classList.remove('hidden');
             }
 
             const thVal = thresholdInput.value || "3";
@@ -774,6 +826,27 @@
             document.getElementById('kpiActiveDays').textContent = activeDaysCount;
         }
 
+        function includeUnmatched() {
+            document.getElementById('unmatchedModal').classList.add('hidden');
+            
+            // Combinar los agentes no encontrados con el procesado principal
+            Object.keys(unmatchedTempCounts).forEach(agent => {
+                processedCounts[agent] = unmatchedTempCounts[agent];
+                agentNifs[agent] = ""; // Sin NIF ya que no estaban en el listado maestro
+            });
+            
+            // Recalcular totales sumando los temporales
+            const totalCallsEl = document.getElementById('kpiTotalCalls');
+            const newTotalCalls = parseInt(totalCallsEl.textContent, 10) + unmatchedTempTotal;
+            const newTotalAgents = Object.keys(processedCounts).length;
+            
+            // Volver a renderizar tabla y actualizar KPIs
+            renderTable(daysArray, currentMonthNum);
+            updateKPIs(newTotalAgents, newTotalCalls);
+            
+            showToast("Agentes no encontrados incluidos en el cuadrante.", "success");
+        }
+
         function filterTable() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const rows = document.querySelectorAll('#resultTable tbody tr.agent-row');
@@ -865,6 +938,8 @@
             agentsHeaders = [];
             processedCounts = {};
             agentNifs = {};
+            unmatchedTempCounts = {};
+            unmatchedTempTotal = 0;
 
             document.getElementById('searchInput').value = '';
             document.getElementById('ruleBadge').classList.add('hidden');
