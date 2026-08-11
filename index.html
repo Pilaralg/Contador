@@ -324,7 +324,12 @@
             <!-- PASO 4: Analítica Interactiva (Oculto inicialmente) -->
             <div id="step-4" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)]">
                 <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
-                    <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> Análisis Interactivo por Agente</h2>
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> Análisis Interactivo por Agente</h2>
+                        <button onclick="exportAllAgentsStats()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel"></i> Exportar Todos
+                        </button>
+                    </div>
                     <button onclick="hideStats()" class="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold shadow-sm flex items-center gap-2">
                         <i class="fa-solid fa-arrow-left"></i> Volver al Cuadrante
                     </button>
@@ -466,6 +471,7 @@
         let unmatchedTempDescriptions = {};
         let unmatchedTempTotal = 0;
         let currentChart = null;
+        let currentSelectedAgent = null;
 
         // --- FUNCIONES DE CRUCE INTELIGENTE (POWERSHELL LOGIC) ---
         function normalizeText(text) {
@@ -690,11 +696,6 @@
         }
 
         function setupMappingUI() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            monthPicker.value = `${year}-${month}`;
-
             dateColumnSelect.innerHTML = '';
             agentColumnSelect.innerHTML = '';
             nifColumnSelect.innerHTML = '<option value="">-- Ninguno / Generar vacío --</option>';
@@ -736,6 +737,55 @@
                     nifColumnSelect.value = header;
                 }
             });
+
+            // --- LÓGICA PARA AUTO-DETECTAR EL MES CON MÁS REGISTROS ---
+            let bestDateCol = dateColumnSelect.value;
+            let defaultYM = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+            
+            if (bestDateCol && currentSheetData && currentSheetData.length > 0) {
+                const monthCounts = {};
+                currentSheetData.forEach(row => {
+                    let val = row[bestDateCol];
+                    let d = null;
+                    if (val !== null && val !== undefined) {
+                        if (val instanceof Date) {
+                            d = val;
+                        } else if (typeof val === 'number') {
+                            d = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
+                        } else if (typeof val === 'string') {
+                            val = val.trim();
+                            if (val) {
+                                const parsed = new Date(val);
+                                if (!isNaN(parsed.getTime())) {
+                                    d = parsed;
+                                } else {
+                                    const parts = val.split(/[\/\-\.]/);
+                                    if (parts.length === 3) {
+                                        const p0 = parseInt(parts[0], 10);
+                                        const p1 = parseInt(parts[1], 10);
+                                        const p2 = parseInt(parts[2], 10);
+                                        if (p2 > 1000) d = new Date(p2, p1 - 1, p0);
+                                        else if (p0 > 1000) d = new Date(p0, p1 - 1, p2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (d && !isNaN(d.getTime())) {
+                        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                        monthCounts[ym] = (monthCounts[ym] || 0) + 1;
+                    }
+                });
+                
+                let maxCount = 0;
+                for (const [ym, count] of Object.entries(monthCounts)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        defaultYM = ym;
+                    }
+                }
+            }
+            monthPicker.value = defaultYM;
 
             step1.classList.add('hidden');
             step2.classList.remove('hidden');
@@ -1183,6 +1233,7 @@
             unmatchedTempDescriptions = {};
             unmatchedTempTotal = 0;
             if(currentChart) currentChart.destroy();
+            currentSelectedAgent = null;
 
             document.getElementById('searchInput').value = '';
             document.getElementById('ruleBadge').classList.add('hidden');
@@ -1252,6 +1303,8 @@
         }
 
         function selectAgentStats(agent) {
+            currentSelectedAgent = agent;
+
             const detailContainer = document.getElementById('statsAgentDetail');
             const data = processedCounts[agent];
             const descs = agentDescriptions[agent] || [];
@@ -1278,6 +1331,9 @@
                         <h3 class="text-2xl font-bold text-gray-800">${agent}</h3>
                         <p class="text-sm text-gray-500 mt-1">NIF: <span class="font-mono font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded">${agentNifs[agent] || 'No disponible'}</span></p>
                     </div>
+                    <button onclick="exportCurrentAgentStats()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i> Exportar a Excel
+                    </button>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
@@ -1363,6 +1419,177 @@
                     animation: { duration: 500 }
                 }
             });
+        }
+
+        function exportCurrentAgentStats() {
+            if (!currentSelectedAgent) return;
+            
+            try {
+                const agent = currentSelectedAgent;
+                const data = processedCounts[agent];
+                const descs = agentDescriptions[agent] || [];
+                const thresholdLimit = parseInt(document.getElementById('thresholdInput').value, 10) || 3;
+                
+                let totalCalls = 0;
+                let activeDays = 0;
+                
+                // Extraer todas las descripciones únicas del agente en todo el mes para crear las columnas
+                const uniqueDescs = [...new Set(descs.map(d => d.desc.trim() || 'Sin descripción'))].sort();
+                
+                // Cabeceras dinámicas: Día, Total Llamadas, Desc 1, Desc 2, Desc 3...
+                const dailyHeaders = ["Día", "Total Llamadas", ...uniqueDescs];
+                const dailyData = [dailyHeaders];
+                
+                daysArray.forEach(day => {
+                    const count = data[day] || 0;
+                    totalCalls += count;
+                    if (count > thresholdLimit) activeDays++;
+
+                    // Contar cuántas veces aparece cada descripción específicamente en este día
+                    const dailyDescsCounts = {};
+                    descs.filter(d => d.day === day).forEach(d => {
+                        const descStr = d.desc.trim() || 'Sin descripción';
+                        dailyDescsCounts[descStr] = (dailyDescsCounts[descStr] || 0) + 1;
+                    });
+
+                    // Construir la fila con los recuentos exactos bajo cada columna
+                    const row = [day, count];
+                    uniqueDescs.forEach(desc => {
+                        row.push(dailyDescsCounts[desc] || 0); // Pone 0 si ese día no hizo ese tipo de llamada
+                    });
+                    
+                    dailyData.push(row);
+                });
+                
+                const avg = activeDays > 0 ? (totalCalls / activeDays).toFixed(1) : 0;
+                
+                const summaryData = [
+                    ["RESUMEN DEL AGENTE"],
+                    ["Nombre:", agent],
+                    ["NIF:", agentNifs[agent] || 'No disponible'],
+                    ["Total Llamadas Mes:", totalCalls],
+                    ["Días Activos (>" + thresholdLimit + "):", activeDays],
+                    ["Promedio Diario:", Number(avg)],
+                    [],
+                    ["EVOLUCIÓN DIARIA Y DESGLOSE DE TRANSACCIONES"]
+                ];
+                
+                const wsData1 = summaryData.concat(dailyData);
+                const ws1 = XLSX.utils.aoa_to_sheet(wsData1);
+                
+                // Procesar descripciones totales para la segunda hoja
+                const descCounts = {};
+                descs.forEach(d => {
+                    const descText = d.desc.trim() || 'Sin descripción';
+                    descCounts[descText] = (descCounts[descText] || 0) + 1;
+                });
+                const sortedDescs = Object.entries(descCounts).sort((a, b) => b[1] - a[1]);
+                
+                const wsData2 = [["Cantidad Total", "Descripción / Motivo"]];
+                sortedDescs.forEach(([desc, count]) => {
+                    wsData2.push([count, desc]);
+                });
+                const ws2 = XLSX.utils.aoa_to_sheet(wsData2);
+                
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws1, "Estudio Detallado");
+                
+                // Nombre de archivo seguro
+                const safeName = agent.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
+                XLSX.writeFile(wb, `Estudio_Analitico_${safeName}.xlsx`);
+                
+                showToast("Estudio analítico del agente exportado correctamente.", "success");
+            } catch (error) {
+                showToast("Error al exportar las estadísticas.");
+                console.error(error);
+            }
+        }
+
+        function exportAllAgentsStats() {
+            const agents = Object.keys(processedCounts).sort();
+            if (agents.length === 0) {
+                showToast("No hay agentes para exportar.", "error");
+                return;
+            }
+
+            const thresholdLimit = parseInt(document.getElementById('thresholdInput').value, 10) || 3;
+            
+            showToast("Generando exportación masiva. Esto puede tardar unos segundos...", "success");
+
+            // Timeout para dejar que la interfaz se actualice antes de congelar el navegador procesando
+            setTimeout(() => {
+                try {
+                    const wb = XLSX.utils.book_new();
+                    
+                    agents.forEach(agent => {
+                        const data = processedCounts[agent];
+                        const descs = agentDescriptions[agent] || [];
+                        
+                        let totalCalls = 0;
+                        let activeDays = 0;
+                        
+                        const uniqueDescs = [...new Set(descs.map(d => d.desc.trim() || 'Sin descripción'))].sort();
+                        const dailyHeaders = ["Día", "Total Llamadas", ...uniqueDescs];
+                        const dailyData = [dailyHeaders];
+                        
+                        daysArray.forEach(day => {
+                            const count = data[day] || 0;
+                            totalCalls += count;
+                            if (count > thresholdLimit) activeDays++;
+
+                            const dailyDescsCounts = {};
+                            descs.filter(d => d.day === day).forEach(d => {
+                                const descStr = d.desc.trim() || 'Sin descripción';
+                                dailyDescsCounts[descStr] = (dailyDescsCounts[descStr] || 0) + 1;
+                            });
+
+                            const row = [day, count];
+                            uniqueDescs.forEach(desc => {
+                                row.push(dailyDescsCounts[desc] || 0);
+                            });
+                            
+                            dailyData.push(row);
+                        });
+                        
+                        const avg = activeDays > 0 ? (totalCalls / activeDays).toFixed(1) : 0;
+                        
+                        const summaryData = [
+                            ["RESUMEN DEL AGENTE"],
+                            ["Nombre:", agent],
+                            ["NIF:", agentNifs[agent] || 'No disponible'],
+                            ["Total Llamadas Mes:", totalCalls],
+                            ["Días Activos (>" + thresholdLimit + "):", activeDays],
+                            ["Promedio Diario:", Number(avg)],
+                            [],
+                            ["EVOLUCIÓN DIARIA Y DESGLOSE DE TRANSACCIONES"]
+                        ];
+                        
+                        const wsData = summaryData.concat(dailyData);
+                        const ws = XLSX.utils.aoa_to_sheet(wsData);
+                        
+                        // Generar un nombre de hoja válido y único para Excel (máx 31 caracteres)
+                        let safeName = agent.replace(/[^a-zA-Z0-9]/gi, '_').substring(0, 31);
+                        if (!safeName) safeName = "Agente";
+                        
+                        let baseName = safeName.substring(0, 27);
+                        let finalName = safeName;
+                        let counter = 1;
+                        while (wb.SheetNames.includes(finalName)) {
+                            finalName = `${baseName}_${counter}`;
+                            counter++;
+                        }
+                        
+                        XLSX.utils.book_append_sheet(wb, ws, finalName);
+                    });
+
+                    const selectedMonthStr = document.getElementById('monthPicker').value || "Generado";
+                    XLSX.writeFile(wb, `Estadisticas_Completas_${selectedMonthStr}.xlsx`);
+                    showToast("Estadísticas de todos los agentes exportadas correctamente.", "success");
+                } catch (e) {
+                    showToast("Error en el procesamiento masivo de Excel.", "error");
+                    console.error(e);
+                }
+            }, 100);
         }
     </script>
 </body>
