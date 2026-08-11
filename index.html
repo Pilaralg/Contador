@@ -6,7 +6,6 @@
     <title>Generador de Cuadrantes de Llamadas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Chart.js para las gráficas analíticas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -15,7 +14,6 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
-        /* Estilos de la tabla de cuadrante */
         .excel-table th {
             background-color: #008080;
             color: white;
@@ -61,7 +59,6 @@
         .excel-table tr:hover td:not(.nif-col):not(.agente-col) {
             background-color: #f0fdf4;
         }
-        /* Scrollbar estilizado */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -73,8 +70,6 @@
             background: #008080;
             border-radius: 4px;
         }
-        
-        /* Animación para el escáner láser de la pantalla de carga */
         @keyframes scan {
             0% { top: 0%; opacity: 0; }
             10% { opacity: 1; }
@@ -107,8 +102,8 @@
         <span id="toastMessage" class="text-sm font-medium"></span>
     </div>
 
-    <main class="flex-grow p-4 md:p-6 overflow-y-auto">
-        <div class="w-full px-2 md:px-4 space-y-6">
+    <main class="flex-grow p-4 md:p-6 overflow-y-auto w-full">
+        <div class="w-full space-y-6">
 
             <div id="step-1" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 text-center transition-all max-w-4xl mx-auto my-8">
                 <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold shadow-inner">
@@ -149,7 +144,7 @@
                 </div>
             </div>
 
-            <div id="step-2" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 hidden transition-all max-w-4xl mx-auto">
+            <div id="step-2" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 hidden transition-all max-w-5xl mx-auto">
                 <div class="flex items-center gap-3 border-b pb-4 mb-6">
                     <div class="w-10 h-10 bg-teal-100 text-teal-700 rounded-xl flex items-center justify-center font-bold text-lg">2</div>
                     <div>
@@ -158,7 +153,7 @@
                     </div>
                 </div>
 
-                <!-- Selector de Hoja de Excel (si hay varias) -->
+                <!-- Selector de Hoja de Excel -->
                 <div id="sheetSelectorContainer" class="hidden mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl">
                     <label class="block text-sm font-semibold text-amber-900 mb-1">
                         <i class="fa-solid fa-layer-group text-amber-600 mr-1"></i> Selecciona la Pestaña del Excel:
@@ -167,6 +162,7 @@
                     </select>
                 </div>
 
+                <!-- Campos de Mapeo Alineados -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 items-end">
                     <div class="flex flex-col justify-end h-full">
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Mes del Cuadrante:</label>
@@ -190,6 +186,15 @@
                     <div class="flex flex-col justify-end h-full">
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Columna Descripción (Opcional):</label>
                         <select id="descColumn" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Configuración de T.Conv. (TMO) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-end bg-teal-50/50 p-4 rounded-xl border border-teal-100">
+                    <div class="flex flex-col justify-end h-full">
+                        <label class="block text-xs font-bold text-teal-900 uppercase tracking-wider mb-2">Columna T.Conv. / Minutos (Opcional):</label>
+                        <select id="tconvColumn" class="w-full border border-teal-300 rounded-lg p-2.5 bg-white text-sm focus:ring-2 focus:ring-teal-500 outline-none">
                         </select>
                     </div>
                 </div>
@@ -234,13 +239,9 @@
             </div>
 
             <div id="step-loading" class="bg-slate-900 rounded-2xl shadow-2xl border border-teal-500/30 p-12 text-center hidden transition-all max-w-4xl mx-auto my-8 flex-col items-center justify-center min-h-[50vh] relative overflow-hidden">
-                <!-- Fondo de cuadrícula cibernética -->
-                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDM5LjףnakgwIDM5LjVoNDBWMGgtMXYzOS41SDB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] opacity-20"></div>
-                
-                <!-- Escáner láser -->
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDM5LjVjLjMgMCA2LjIgMCA5LjUgMvhxMTJ2LTEyem0wIDAiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-20"></div>
                 <div class="absolute left-0 w-full h-[2px] bg-teal-400 shadow-[0_0_15px_#2dd4bf] animate-[scan_2.5s_ease-in-out_infinite] z-20"></div>
 
-                <!-- Núcleo central holográfico -->
                 <div class="relative z-10 w-32 h-32 mb-8 mx-auto flex items-center justify-center">
                     <div class="absolute inset-0 border-4 border-teal-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
                     <div class="absolute inset-2 border-4 border-dashed border-teal-400/40 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
@@ -250,7 +251,6 @@
                     </div>
                 </div>
 
-                <!-- Textos dinámicos y Barra de progreso -->
                 <div class="relative z-10 w-full max-w-md mx-auto">
                     <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-400 mb-3 tracking-widest animate-pulse">PROCESANDO</h2>
                     
@@ -259,10 +259,8 @@
                         <span id="loading-percentage" class="font-bold text-teal-300">0%</span>
                     </div>
                     
-                    <!-- Contenedor de la barra -->
                     <div class="w-full bg-slate-800 rounded-full h-3 border border-slate-700 overflow-hidden relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]">
                         <div id="loading-progress-bar" class="bg-gradient-to-r from-teal-600 via-teal-400 to-blue-500 h-full rounded-full w-0 transition-all duration-100 ease-linear relative">
-                            <!-- Destello en la punta de la barra -->
                             <div class="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white/50"></div>
                         </div>
                     </div>
@@ -271,10 +269,7 @@
 
             <div id="step-3" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)] w-full">
 
-                <!-- Header de Resultados y KPIs -->
-                <div class="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-wrap items-center justify-between gap-4 shrink-0">
-                    
-                    <!-- KPI Cards -->
+                <div class="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-wrap items-center justify-between gap-4 shrink-0 w-full">
                     <div class="flex items-center gap-3 flex-wrap">
                         <div class="bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
                             <i class="fa-solid fa-users text-teal-600 text-sm"></i>
@@ -293,7 +288,6 @@
                         </div>
                     </div>
 
-                    <!-- Herramientas y Botones -->
                     <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
                         <div class="relative w-full sm:w-48">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
@@ -312,16 +306,14 @@
                     </div>
                 </div>
 
-                <!-- Tabla Resultado Estilo Excel -->
-                <div class="p-0 overflow-auto flex-grow relative bg-gray-100">
+                <div class="p-0 overflow-auto flex-grow relative bg-gray-100 w-full">
                     <table id="resultTable" class="excel-table w-full border-collapse">
-                        <!-- Generado dinámicamente por JS -->
                     </table>
                 </div>
             </div>
 
             <div id="step-4" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)] w-full">
-                <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+                <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0 w-full">
                     <div class="flex items-center gap-4">
                         <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> Análisis Interactivo por Agente</h2>
                         <button onclick="exportAllAgentsStats()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm flex items-center gap-2">
@@ -332,9 +324,8 @@
                         <i class="fa-solid fa-arrow-left"></i> Volver al Cuadrante
                     </button>
                 </div>
-                <div class="flex flex-grow overflow-hidden">
+                <div class="flex flex-grow overflow-hidden w-full">
                     <div class="w-1/3 border-r border-gray-200 bg-gray-50 p-2 overflow-y-auto" id="statsAgentList">
-                        <!-- Lista de agentes generada por JS -->
                     </div>
                     <div class="w-2/3 p-6 overflow-y-auto bg-white flex flex-col gap-6" id="statsAgentDetail">
                         <div class="text-center text-gray-400 mt-20">
@@ -361,7 +352,6 @@
             <div class="p-6 overflow-y-auto flex-grow">
                 <p class="text-gray-700 text-sm mb-4">Se han encontrado llamadas registradas para los siguientes nombres en el fichero de transacciones, pero <strong>no aparecen en el fichero maestro de agentes</strong>. Han sido excluidos del cuadrante:</p>
                 <ul id="unmatchedList" class="list-disc pl-5 text-sm text-gray-700 space-y-1.5 bg-amber-50/50 p-4 rounded-xl border border-amber-100 font-medium">
-                    <!-- Los elementos <li> se generan por JS -->
                 </ul>
             </div>
             <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0">
@@ -421,26 +411,21 @@
 
                 <div>
                     <h4 class="text-lg font-bold text-teal-800 border-b border-teal-100 pb-2 mb-3">3. Herramientas de Análisis</h4>
-                    <p class="font-bold text-gray-800 mb-1">Análisis Interactivo por Agente</p>
+                    <p class="font-bold text-gray-800 mb-1">Análisis Interactivo por Agente y Mejoras Estadísticas</p>
                     <p class="mb-2">Más allá del cuadrante global, la aplicación ofrece una vista detallada individual. En la sección "Análisis Interactivo por Agente", podrás:</p>
                     <ol class="list-decimal pl-5 space-y-1 mb-4">
-                        <li>Seleccionar a un agente específico de una lista desplegable.</li>
-                        <li>Visualizar sus estadísticas individuales y gráficos interactivos con porcentajes de distribución.</li>
-                        <li>Revisar las descripciones detalladas de su actividad ordenadas de mayor a menor frecuencia, permitiendo un monitoreo exhaustivo sin necesidad de buscar en todo el cuadrante general.</li>
+                        <li>Seleccionar a un agente específico de una lista lateral.</li>
+                        <li>Visualizar sus estadísticas individuales con métricas clave, gráficos circulares de porcentajes y cálculo automático del <strong>TMO (Tiempo Medio de Conversación)</strong> en formato MM:SS.</li>
+                        <li>Revisar, ordenar y analizar los totales por cada descripción o motivo de llamada.</li>
+                        <li>Exportar tanto el estudio analítico individual detallado (en formato de matriz de columnas por cada descripción) como realizar una exportación masiva ("Exportar Todos") generando un libro Excel con una hoja independiente para cada agente.</li>
                     </ol>
-                    <p class="font-bold text-gray-800 mb-1">Exportación de Estudios Analíticos</p>
-                    <p class="mb-2">La plataforma permite descargar reportes estadísticos avanzados en formato Excel para realizar estudios más profundos o tablas dinámicas:</p>
-                    <ul class="list-disc pl-5 space-y-2">
-                        <li><strong>Exportación Individual:</strong> Dentro de la ficha de cada agente, el botón "Exportar a Excel" generará un libro con el desglose diario de sus llamadas en formato de matriz de columnas por cada "Descripción/Motivo" único registrado en el mes.</li>
-                        <li><strong>Exportación Masiva ("Exportar Todos"):</strong> En la cabecera de la sección analítica, el botón compilará la misma estructura matricial detallada para <em>todos los agentes</em>, creando automáticamente una hoja (pestaña) independiente para cada uno dentro de un único archivo Excel.</li>
-                    </ul>
                 </div>
 
                 <div>
                     <h4 class="text-lg font-bold text-teal-800 border-b border-teal-100 pb-2 mb-3">4. Avisos y Resolución de Problemas</h4>
                     <p class="font-bold text-gray-800 mb-1">Aviso de Seguridad: Inconsistencia de Datos</p>
                     <p class="mb-2">Si la plataforma detecta nombres que tienen llamadas registradas en el Fichero LLAMADAS pero que no existen en el Fichero maestro de AGENTES, se activará un panel de "Aviso de Seguridad".</p>
-                    <p>El sistema listará a estos agentes huérfanos y los excluirá del cuadrante automáticamente. Si ves este aviso, te recomendamos revisar tu Fichero AGENTES para asegurar que está actualizado o verificar que no haya errores tipográficos en los nombres entre un archivo y otro. Tienes la opción de ignorarlos o incluirlos forzosamente en el cuadrante.</p>
+                    <p>El sistema listará a estos agentes huérfanos y ofrecerá la opción de ignorarlos o <strong>incluirlos automáticamente</strong> con los nombres extraídos del fichero de transacciones.</p>
                 </div>
                 
                 <div class="mt-8 pt-6 border-t border-gray-200 text-right">
@@ -459,25 +444,26 @@
             document.getElementById('manualModal').classList.add('hidden');
         }
 
-        let rawWorkbook = null; // Calls workbook
+        let rawWorkbook = null;
         let agentsWorkbook = null;
-        let agentInfo = null; // Contains metadata about agents sheet
+        let agentInfo = null;
         let currentSheetData = [];
-        let headers = []; // Calls headers
+        let headers = [];
         let agentsHeaders = [];
         let processedCounts = {};
         let agentNifs = {};
         let agentDescriptions = {};
+        let agentTConv = {};
         let daysArray = [];
         let currentMonthNum = 1;
         let unmatchedTempCounts = {};
         let unmatchedTempDescriptions = {};
+        let unmatchedTempTConv = {};
         let unmatchedTempTotal = 0;
         let currentChart = null;
         let currentDescChart = null;
         let currentSelectedAgent = null;
 
-        // --- FUNCIONES DE CRUCE INTELIGENTE (POWERSHELL LOGIC) ---
         function normalizeText(text) {
             if (text === null || text === undefined) return '';
             let s = String(text).trim().toLowerCase();
@@ -563,7 +549,6 @@
             }
             throw new Error(`No se encontró hoja válida en fichero ${isAgents ? 'AGENTES' : 'LLAMADAS'}.`);
         }
-        // --- FIN FUNCIONES DE CRUCE ---
 
         function toggleAboveTextInput() {
             const typeSelect = document.getElementById('aboveThresholdType');
@@ -575,7 +560,6 @@
             }
         }
 
-        // Referencias del DOM actualizadas
         const fileAgents = document.getElementById('fileAgents');
         const fileCalls = document.getElementById('fileCalls');
         const btnProceed = document.getElementById('btnProceed');
@@ -589,13 +573,13 @@
         const dateColumnSelect = document.getElementById('dateColumn');
         const agentColumnSelect = document.getElementById('agentColumn');
         const nifColumnSelect = document.getElementById('nifColumn');
+        const tconvColumnSelect = document.getElementById('tconvColumn');
         const sheetSelectorContainer = document.getElementById('sheetSelectorContainer');
         const sheetSelect = document.getElementById('sheetSelect');
         const resultTable = document.getElementById('resultTable');
         const thresholdInput = document.getElementById('thresholdInput');
         const thresholdText = document.getElementById('thresholdText');
 
-        // Manejo de los dos archivos
         fileAgents.addEventListener('change', (e) => {
             if (e.target.files.length) {
                 labelAgents.textContent = e.target.files[0].name;
@@ -631,12 +615,10 @@
 
         async function processFiles() {
             try {
-                // Leer Agentes
                 const agentsData = await readFileAsArrayBuffer(fileAgents.files[0]);
                 agentsWorkbook = XLSX.read(agentsData, { type: 'array' });
                 agentInfo = findBestSheet(agentsWorkbook, true);
 
-                // Obtener cabeceras de agentes (para el NIF)
                 agentsHeaders = [];
                 const rangeAgents = XLSX.utils.decode_range(agentInfo.sheet['!ref']);
                 for (let c = 0; c <= rangeAgents.e.c; c++) {
@@ -644,7 +626,6 @@
                     agentsHeaders.push(cell && cell.v ? String(cell.v).trim() : '');
                 }
 
-                // Leer Llamadas
                 const callsData = await readFileAsArrayBuffer(fileCalls.files[0]);
                 rawWorkbook = XLSX.read(callsData, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' });
 
@@ -704,17 +685,17 @@
             agentColumnSelect.innerHTML = '';
             nifColumnSelect.innerHTML = '<option value="">-- Ninguno / Generar vacío --</option>';
             document.getElementById('descColumn').innerHTML = '<option value="">-- Ninguna --</option>';
+            tconvColumnSelect.innerHTML = '<option value="">-- Ninguna / No calcular TMO --</option>';
 
-            // Cabeceras de Llamadas (Fecha y Agente)
             headers.forEach(header => {
                 if (!header) return;
                 const hStr = String(header).trim();
                 dateColumnSelect.add(new Option(hStr, hStr));
                 agentColumnSelect.add(new Option(hStr, hStr));
                 document.getElementById('descColumn').add(new Option(hStr, hStr));
+                tconvColumnSelect.add(new Option(hStr, hStr));
             });
 
-            // Cabeceras de Agentes (NIF)
             agentsHeaders.forEach(header => {
                 if (!header) return;
                 nifColumnSelect.add(new Option(header, header));
@@ -730,7 +711,10 @@
                     agentColumnSelect.selectedIndex = index;
                 }
                 if (h.includes('desc') || h.includes('detalle') || h.includes('motivo') || h.includes('comentario') || h.includes('observaci')) {
-                    document.getElementById('descColumn').selectedIndex = index + 1; // +1 por la opción "-- Ninguna --"
+                    document.getElementById('descColumn').value = header;
+                }
+                if (h.includes('t.conv') || h.includes('tconv') || h.includes('conversacion') || h.includes('duracion') || h.includes('minuto') || h.includes('tiempo')) {
+                    tconvColumnSelect.value = header;
                 }
             });
 
@@ -742,7 +726,6 @@
                 }
             });
 
-            // --- LÓGICA PARA AUTO-DETECTAR EL MES CON MÁS REGISTROS ---
             let bestDateCol = dateColumnSelect.value;
             let defaultYM = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
             
@@ -800,6 +783,7 @@
             const agentCol = agentColumnSelect.value;
             const nifCol = nifColumnSelect.value;
             const descCol = document.getElementById('descColumn').value;
+            const tconvCol = document.getElementById('tconvColumn').value;
             const selectedMonthStr = monthPicker.value;
 
             if (!selectedMonthStr || !dateCol || !agentCol) {
@@ -807,13 +791,11 @@
                 return;
             }
 
-            // Ocultar paso 2 y mostrar la pantalla de carga animada
             step2.classList.add('hidden');
             const stepLoading = document.getElementById('step-loading');
             stepLoading.classList.remove('hidden');
-            stepLoading.classList.add('flex'); // Necesario para centrar el contenido
+            stepLoading.classList.add('flex');
 
-            // --- ANIMACIÓN CINEMÁTICA ---
             let progress = 0;
             const progressBar = document.getElementById('loading-progress-bar');
             const progressText = document.getElementById('loading-percentage');
@@ -822,13 +804,13 @@
             const steps = [
                 "Extrayendo listado maestro de agentes...",
                 "Analizando matriz de transacciones...",
-                "Ejecutando algoritmos de coincidencia...",
+                "Calculando métricas de conversación (TMO)...",
                 "Procesando excepciones y festivos...",
                 "Consolidando cuadrante final..."
             ];
 
             const loadingInterval = setInterval(() => {
-                progress += 2; // Incremento de 2% cada 100ms = 5000ms
+                progress += 2;
                 if (progress > 100) progress = 100;
                 
                 progressBar.style.width = `${progress}%`;
@@ -844,7 +826,6 @@
                     clearInterval(loadingInterval);
                 }
             }, 100);
-            // --- FIN ANIMACIÓN ---
 
             setTimeout(() => {
                 const [selYear, selMonth] = selectedMonthStr.split('-').map(Number);
@@ -855,8 +836,10 @@
                 processedCounts = {};
                 agentNifs = {};
                 agentDescriptions = {};
+                agentTConv = {};
                 unmatchedTempCounts = {};
                 unmatchedTempDescriptions = {};
+                unmatchedTempTConv = {};
                 unmatchedTempTotal = 0;
                 let totalCallsCount = 0;
                 let unmatchedAgents = new Set(); 
@@ -864,7 +847,6 @@
                 const masterAgents = [];
                 const nifColIdx = nifCol ? agentsHeaders.indexOf(nifCol) : -1;
 
-                // 1. Extraer Agentes del Fichero Maestro
                 const agentRange = XLSX.utils.decode_range(agentInfo.sheet['!ref']);
                 for (let r = agentInfo.row + 1; r <= agentRange.e.r; r++) {
                     const nameCell = agentInfo.sheet[XLSX.utils.encode_cell({r: r, c: agentInfo.col})];
@@ -885,6 +867,7 @@
                         processedCounts[agentName] = {};
                         agentNifs[agentName] = nifVal;
                         agentDescriptions[agentName] = [];
+                        agentTConv[agentName] = 0;
                     }
                 }
 
@@ -922,11 +905,34 @@
                     return null;
                 };
 
-                // 2. Cruzar con el Fichero de Llamadas
+                const parseNumericMinutes = (val) => {
+                    if (val === null || val === undefined) return 0;
+                    if (typeof val === 'number') {
+                        // Excel serial time fraction of a day (e.g. 0.000694 = 1 min) or raw minutes
+                        if (val < 1) return val * 1440; // Convert day fraction to minutes
+                        return val;
+                    }
+                    let s = String(val).trim();
+                    if (!s) return 0;
+                    
+                    if (s.includes(':')) {
+                        const parts = s.split(':').map(p => parseFloat(p) || 0);
+                        if (parts.length === 3) {
+                            return parts[0] * 60 + parts[1] + parts[2] / 60;
+                        } else if (parts.length === 2) {
+                            return parts[0] + parts[1] / 60;
+                        }
+                    }
+                    
+                    let num = parseFloat(s.replace(',', '.'));
+                    return isNaN(num) ? 0 : num;
+                };
+
                 currentSheetData.forEach(row => {
                     let callAgent = row[agentCol];
                     let dateVal = row[dateCol];
                     let callDesc = descCol && row[descCol] ? String(row[descCol]).trim() : '';
+                    let callTConv = tconvCol && row[tconvCol] !== undefined ? parseNumericMinutes(row[tconvCol]) : 0;
 
                     if (!callAgent || dateVal === undefined) return;
                     
@@ -950,6 +956,7 @@
                             }
                             processedCounts[matchedMasterName][day]++;
                             if(callDesc) agentDescriptions[matchedMasterName].push({day: day, desc: callDesc});
+                            agentTConv[matchedMasterName] = (agentTConv[matchedMasterName] || 0) + callTConv;
                             totalCallsCount++;
                         } else {
                             unmatchedAgents.add(callAgent);
@@ -957,12 +964,14 @@
                             if (!unmatchedTempCounts[callAgent]) {
                                 unmatchedTempCounts[callAgent] = {};
                                 unmatchedTempDescriptions[callAgent] = [];
+                                unmatchedTempTConv[callAgent] = 0;
                             }
                             if (!unmatchedTempCounts[callAgent][day]) {
                                 unmatchedTempCounts[callAgent][day] = 0;
                             }
                             unmatchedTempCounts[callAgent][day]++;
                             if(callDesc) unmatchedTempDescriptions[callAgent].push({day: day, desc: callDesc});
+                            unmatchedTempTConv[callAgent] += callTConv;
                             unmatchedTempTotal++;
                         }
                     }
@@ -1056,7 +1065,7 @@
                     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
                     if (isWeekend) {
-                        tbodyHTML += `<td class="bg-gray-100/60"></td>`;
+                        tbodyHTML += `<td></td>`;
                     } else if (count <= thresholdLimit) {
                         tbodyHTML += `<td class="text-gray-400 text-xs font-normal">${labelBelow}</td>`;
                     } else {
@@ -1113,6 +1122,7 @@
                 processedCounts[agent] = unmatchedTempCounts[agent];
                 agentNifs[agent] = ""; 
                 agentDescriptions[agent] = unmatchedTempDescriptions[agent] || [];
+                agentTConv[agent] = unmatchedTempTConv[agent] || 0;
             });
             
             const totalCallsEl = document.getElementById('kpiTotalCalls');
@@ -1147,7 +1157,7 @@
                 
                 const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
                 const statsData = [
-                    ["NIF", "Agente", "Total Llamadas Mes", "Días con Llamadas (>0)", "Días Activos (> Umbral)", "Días Bajo Umbral (≤ Umbral)", "Promedio Llamadas / Día con Actividad"]
+                    ["NIF", "Agente", "Total Llamadas Mes", "Días con Llamadas (>0)", "Días Activos (> Umbral)", "Días Bajo Umbral (≤ Umbral)", "Promedio Llamadas / Día con Actividad", "TMO (Minutos Medios)"]
                 ];
 
                 const agents = Object.keys(processedCounts).sort();
@@ -1170,6 +1180,8 @@
                     });
 
                     const avgPerActiveDay = daysWithCalls > 0 ? (totalCalls / daysWithCalls).toFixed(2) : 0;
+                    const totalMins = agentTConv[agent] || 0;
+                    const tmoVal = totalCalls > 0 ? (totalMins / totalCalls).toFixed(2) : 0;
 
                     statsData.push([
                         nif,
@@ -1178,7 +1190,8 @@
                         daysWithCalls,
                         daysAboveThreshold,
                         daysBelowOrEqualThreshold,
-                        Number(avgPerActiveDay)
+                        Number(avgPerActiveDay),
+                        Number(tmoVal)
                     ]);
                 });
 
@@ -1215,8 +1228,10 @@
             processedCounts = {};
             agentNifs = {};
             agentDescriptions = {};
+            agentTConv = {};
             unmatchedTempCounts = {};
             unmatchedTempDescriptions = {};
+            unmatchedTempTConv = {};
             unmatchedTempTotal = 0;
             if(currentChart) currentChart.destroy();
             if(currentDescChart) currentDescChart.destroy();
@@ -1236,7 +1251,6 @@
             step1.classList.remove('hidden');
         }
 
-        // --- FUNCIONES DE ANALÍTICA INTERACTIVA ---
         function showStats() {
             document.getElementById('step-3').classList.add('hidden');
             document.getElementById('step-4').classList.remove('hidden');
@@ -1311,7 +1325,13 @@
                 chartData.push(count);
             });
 
-            // Agrupar descripciones para la tabla y la gráfica circular
+            const totalMinutes = agentTConv[agent] || 0;
+            const avgMins = totalCalls > 0 ? (totalMinutes / totalCalls) : 0;
+            const totalSecs = Math.round(avgMins * 60);
+            const tmoMins = Math.floor(totalSecs / 60);
+            const tmoSecs = totalSecs % 60;
+            const tmoVal = `${String(tmoMins).padStart(2, '0')}:${String(tmoSecs).padStart(2, '0')}`;
+
             const descCounts = {};
             descs.forEach(d => {
                 const descText = d.desc.trim() || 'Sin descripción';
@@ -1323,7 +1343,7 @@
             const pieData = sortedDescs.map(item => item[1]);
 
             let html = `
-                <div class="flex justify-between items-start border-b border-gray-200 pb-4 shrink-0">
+                <div class="flex justify-between items-start border-b border-gray-200 pb-4 shrink-0 w-full">
                     <div>
                         <h3 class="text-2xl font-bold text-gray-800">${agent}</h3>
                         <p class="text-sm text-gray-500 mt-1">NIF: <span class="font-mono font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded">${agentNifs[agent] || 'No disponible'}</span></p>
@@ -1333,7 +1353,7 @@
                     </button>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0 w-full">
                     <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center shadow-sm">
                         <div class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">Total Llamadas</div>
                         <div class="text-3xl font-black text-blue-700">${totalCalls}</div>
@@ -1346,10 +1366,13 @@
                         <div class="text-purple-500 text-xs font-bold uppercase tracking-wider mb-1">Promedio Diario (Activos)</div>
                         <div class="text-3xl font-black text-purple-700">${activeDays > 0 ? (totalCalls/activeDays).toFixed(1) : 0}</div>
                     </div>
+                    <div class="bg-amber-50 border border-amber-100 p-4 rounded-xl text-center shadow-sm">
+                        <div class="text-amber-600 text-xs font-bold uppercase tracking-wider mb-1" title="Tiempo Medio de Conversación (MM:SS)">TMO (MM:SS)</div>
+                        <div class="text-3xl font-black text-amber-700">${tmoVal}</div>
+                    </div>
                 </div>
 
-                <!-- Gráficas (Barras y Circular de Porcentajes) -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 shrink-0">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 shrink-0 w-full">
                     <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
                         <h4 class="text-sm font-bold text-gray-700 mb-4"><i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>Evolución Diaria (Llamadas)</h4>
                         <div class="h-48 w-full relative">
@@ -1364,7 +1387,7 @@
                     </div>
                 </div>
                 
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col min-h-[250px] flex-grow">
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col min-h-[250px] flex-grow w-full">
                     <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl shrink-0 flex justify-between items-center">
                         <h4 class="text-sm font-bold text-gray-700"><i class="fa-solid fa-list-ul text-blue-400 mr-2"></i>Descripciones de Transacciones (${descs.length})</h4>
                     </div>
@@ -1470,7 +1493,7 @@
                 const agent = currentSelectedAgent;
                 const data = processedCounts[agent];
                 const descs = agentDescriptions[agent] || [];
-                const thresholdLimit = parseInt(document.getElementById('thresholdInput').value, 10) || 3;
+                const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
                 
                 let totalCalls = 0;
                 let activeDays = 0;
@@ -1500,6 +1523,12 @@
                 });
                 
                 const avg = activeDays > 0 ? (totalCalls / activeDays).toFixed(1) : 0;
+                const totalMinutes = agentTConv[agent] || 0;
+                const avgMins = totalCalls > 0 ? (totalMinutes / totalCalls) : 0;
+                const totalSecs = Math.round(avgMins * 60);
+                const tmoMins = Math.floor(totalSecs / 60);
+                const tmoSecs = totalSecs % 60;
+                const tmoVal = `${String(tmoMins).padStart(2, '0')}:${String(tmoSecs).padStart(2, '0')}`;
                 
                 const summaryData = [
                     ["RESUMEN DEL AGENTE"],
@@ -1508,6 +1537,7 @@
                     ["Total Llamadas Mes:", totalCalls],
                     ["Días Activos (>" + thresholdLimit + "):", activeDays],
                     ["Promedio Diario:", Number(avg)],
+                    ["TMO (MM:SS):", tmoVal],
                     [],
                     ["EVOLUCIÓN DIARIA Y DESGLOSE DE TRANSACCIONES"]
                 ];
@@ -1549,7 +1579,7 @@
                 return;
             }
 
-            const thresholdLimit = parseInt(document.getElementById('thresholdInput').value, 10) || 3;
+            const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
             
             showToast("Generando exportación masiva. Esto puede tardar unos segundos...", "success");
 
@@ -1588,6 +1618,12 @@
                         });
                         
                         const avg = activeDays > 0 ? (totalCalls / activeDays).toFixed(1) : 0;
+                        const totalMinutes = agentTConv[agent] || 0;
+                        const avgMins = totalCalls > 0 ? (totalMinutes / totalCalls) : 0;
+                        const totalSecs = Math.round(avgMins * 60);
+                        const tmoMins = Math.floor(totalSecs / 60);
+                        const tmoSecs = totalSecs % 60;
+                        const tmoVal = `${String(tmoMins).padStart(2, '0')}:${String(tmoSecs).padStart(2, '0')}`;
                         
                         const summaryData = [
                             ["RESUMEN DEL AGENTE"],
@@ -1596,6 +1632,7 @@
                             ["Total Llamadas Mes:", totalCalls],
                             ["Días Activos (>" + thresholdLimit + "):", activeDays],
                             ["Promedio Diario:", Number(avg)],
+                            ["TMO (MM:SS):", tmoVal],
                             [],
                             ["EVOLUCIÓN DIARIA Y DESGLOSE DE TRANSACCIONES"]
                         ];
