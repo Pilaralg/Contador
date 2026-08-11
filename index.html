@@ -6,6 +6,8 @@
     <title>Generador de Cuadrantes de Llamadas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Añadido Chart.js para las gráficas analíticas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -151,7 +153,7 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Mes del Cuadrante:</label>
                         <input type="month" id="monthPicker" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
@@ -169,6 +171,11 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Columna NIF (Fichero Agentes):</label>
                         <select id="nifColumn" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Columna Descripción (Opcional):</label>
+                        <select id="descColumn" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
                         </select>
                     </div>
                 </div>
@@ -243,6 +250,9 @@
                             <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar agente o NIF..." class="w-full border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-xs bg-white focus:ring-2 focus:ring-teal-500 outline-none">
                         </div>
 
+                        <button onclick="showStats()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-pie"></i> Estadísticas
+                        </button>
                         <button onclick="resetApp()" class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium flex items-center gap-1">
                             <i class="fa-solid fa-arrow-rotate-left"></i> Nuevo
                         </button>
@@ -257,6 +267,27 @@
                     <table id="resultTable" class="excel-table w-full border-collapse">
                         <!-- Generado dinámicamente por JS -->
                     </table>
+                </div>
+            </div>
+
+            <!-- PASO 4: Analítica Interactiva (Oculto inicialmente) -->
+            <div id="step-4" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)]">
+                <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+                    <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> Análisis Interactivo por Agente</h2>
+                    <button onclick="hideStats()" class="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i> Volver al Cuadrante
+                    </button>
+                </div>
+                <div class="flex flex-grow overflow-hidden">
+                    <div class="w-1/3 border-r border-gray-200 bg-gray-50 p-2 overflow-y-auto" id="statsAgentList">
+                        <!-- Lista de agentes generada por JS -->
+                    </div>
+                    <div class="w-2/3 p-6 overflow-y-auto bg-white flex flex-col gap-6" id="statsAgentDetail">
+                        <div class="text-center text-gray-400 mt-20">
+                            <i class="fa-solid fa-hand-pointer text-5xl mb-4"></i>
+                            <p class="text-lg">Selecciona un agente de la lista para ver su análisis y descripciones.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -295,10 +326,13 @@
         let agentsHeaders = [];
         let processedCounts = {};
         let agentNifs = {};
+        let agentDescriptions = {};
         let daysArray = [];
         let currentMonthNum = 1;
         let unmatchedTempCounts = {};
+        let unmatchedTempDescriptions = {};
         let unmatchedTempTotal = 0;
+        let currentChart = null;
 
         // --- FUNCIONES DE CRUCE INTELIGENTE (POWERSHELL LOGIC) ---
         function normalizeText(text) {
@@ -531,6 +565,7 @@
             dateColumnSelect.innerHTML = '';
             agentColumnSelect.innerHTML = '';
             nifColumnSelect.innerHTML = '<option value="">-- Ninguno / Generar vacío --</option>';
+            document.getElementById('descColumn').innerHTML = '<option value="">-- Ninguna --</option>';
 
             // Cabeceras de Llamadas (Fecha y Agente)
             headers.forEach(header => {
@@ -538,6 +573,7 @@
                 const hStr = String(header).trim();
                 dateColumnSelect.add(new Option(hStr, hStr));
                 agentColumnSelect.add(new Option(hStr, hStr));
+                document.getElementById('descColumn').add(new Option(hStr, hStr));
             });
 
             // Cabeceras de Agentes (NIF)
@@ -554,6 +590,9 @@
                 }
                 if (h.includes('agente') || h.includes('nombre') || h.includes('user') || h.includes('operador')) {
                     agentColumnSelect.selectedIndex = index;
+                }
+                if (h.includes('desc') || h.includes('detalle') || h.includes('motivo') || h.includes('comentario') || h.includes('observaci')) {
+                    document.getElementById('descColumn').selectedIndex = index + 1; // +1 por la opción "-- Ninguna --"
                 }
             });
 
@@ -573,6 +612,7 @@
             const dateCol = dateColumnSelect.value;
             const agentCol = agentColumnSelect.value;
             const nifCol = nifColumnSelect.value;
+            const descCol = document.getElementById('descColumn').value;
             const selectedMonthStr = monthPicker.value;
 
             if (!selectedMonthStr || !dateCol || !agentCol) {
@@ -587,7 +627,9 @@
 
             processedCounts = {};
             agentNifs = {};
+            agentDescriptions = {};
             unmatchedTempCounts = {};
+            unmatchedTempDescriptions = {};
             unmatchedTempTotal = 0;
             let totalCallsCount = 0;
             let unmatchedAgents = new Set(); // Nuevo: Set para guardar agentes no encontrados
@@ -621,6 +663,7 @@
                     // Inicializar en 0 para todos los días
                     processedCounts[agentName] = {};
                     agentNifs[agentName] = nifVal;
+                    agentDescriptions[agentName] = [];
                 }
             }
 
@@ -664,6 +707,7 @@
             currentSheetData.forEach(row => {
                 let callAgent = row[agentCol];
                 let dateVal = row[dateCol];
+                let callDesc = descCol && row[descCol] ? String(row[descCol]).trim() : '';
 
                 if (!callAgent || dateVal === undefined) return;
                 
@@ -687,6 +731,7 @@
                             processedCounts[matchedMasterName][day] = 0;
                         }
                         processedCounts[matchedMasterName][day]++;
+                        if(callDesc) agentDescriptions[matchedMasterName].push({day: day, desc: callDesc});
                         totalCallsCount++;
                     } else {
                         // Si no encuentra al agente, lo añade a la lista de excluidos
@@ -695,11 +740,13 @@
                         // Guardar temporalmente sus llamadas por si el usuario decide incluirlos
                         if (!unmatchedTempCounts[callAgent]) {
                             unmatchedTempCounts[callAgent] = {};
+                            unmatchedTempDescriptions[callAgent] = [];
                         }
                         if (!unmatchedTempCounts[callAgent][day]) {
                             unmatchedTempCounts[callAgent][day] = 0;
                         }
                         unmatchedTempCounts[callAgent][day]++;
+                        if(callDesc) unmatchedTempDescriptions[callAgent].push({day: day, desc: callDesc});
                         unmatchedTempTotal++;
                     }
                 }
@@ -833,6 +880,7 @@
             Object.keys(unmatchedTempCounts).forEach(agent => {
                 processedCounts[agent] = unmatchedTempCounts[agent];
                 agentNifs[agent] = ""; // Sin NIF ya que no estaban en el listado maestro
+                agentDescriptions[agent] = unmatchedTempDescriptions[agent] || [];
             });
             
             // Recalcular totales sumando los temporales
@@ -938,15 +986,178 @@
             agentsHeaders = [];
             processedCounts = {};
             agentNifs = {};
+            agentDescriptions = {};
             unmatchedTempCounts = {};
+            unmatchedTempDescriptions = {};
             unmatchedTempTotal = 0;
+            if(currentChart) currentChart.destroy();
 
             document.getElementById('searchInput').value = '';
             document.getElementById('ruleBadge').classList.add('hidden');
 
+            document.getElementById('step-4').classList.add('hidden');
             step3.classList.add('hidden');
             step2.classList.add('hidden');
             step1.classList.remove('hidden');
+        }
+
+        // --- FUNCIONES DE ANALÍTICA INTERACTIVA ---
+        function showStats() {
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-4').classList.remove('hidden');
+            renderStatsList();
+        }
+
+        function hideStats() {
+            document.getElementById('step-4').classList.add('hidden');
+            document.getElementById('step-3').classList.remove('hidden');
+        }
+
+        function renderStatsList() {
+            const listContainer = document.getElementById('statsAgentList');
+            listContainer.innerHTML = '';
+            
+            const agents = Object.keys(processedCounts).sort();
+            
+            const searchBox = document.createElement('div');
+            searchBox.className = 'sticky top-0 bg-gray-50 p-2 border-b border-gray-200 mb-2 z-10';
+            searchBox.innerHTML = `<input type="text" id="statsSearch" placeholder="Buscar agente..." class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">`;
+            listContainer.appendChild(searchBox);
+
+            const ul = document.createElement('ul');
+            ul.className = 'space-y-1 pb-4';
+            ul.id = 'statsUl';
+
+            agents.forEach(agent => {
+                let tCalls = 0;
+                Object.values(processedCounts[agent]).forEach(c => tCalls += c);
+
+                const li = document.createElement('li');
+                li.className = 'cursor-pointer p-2.5 rounded-lg hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-200 text-sm flex justify-between items-center stats-agent-item';
+                li.innerHTML = `<span class="font-medium text-gray-700 truncate mr-2" title="${agent}">${agent}</span> <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-bold shadow-sm">${tCalls}</span>`;
+                li.onclick = () => {
+                    document.querySelectorAll('.stats-agent-item').forEach(el => el.classList.remove('bg-blue-100', 'border-blue-300'));
+                    li.classList.add('bg-blue-100', 'border-blue-300');
+                    selectAgentStats(agent);
+                };
+                ul.appendChild(li);
+            });
+            listContainer.appendChild(ul);
+
+            document.getElementById('statsSearch').addEventListener('keyup', function(e) {
+                const term = e.target.value.toLowerCase();
+                ul.querySelectorAll('li').forEach(li => {
+                    const txt = li.textContent.toLowerCase();
+                    li.style.display = txt.includes(term) ? '' : 'none';
+                });
+            });
+        }
+
+        function selectAgentStats(agent) {
+            const detailContainer = document.getElementById('statsAgentDetail');
+            const data = processedCounts[agent];
+            const descs = agentDescriptions[agent] || [];
+            
+            let totalCalls = 0;
+            let activeDays = 0;
+            const thresholdLimit = parseInt(document.getElementById('thresholdInput').value, 10) || 3;
+            
+            const chartLabels = [];
+            const chartData = [];
+
+            daysArray.forEach(day => {
+                const count = data[day] || 0;
+                totalCalls += count;
+                if (count > thresholdLimit) activeDays++;
+                
+                chartLabels.push(`${day}`);
+                chartData.push(count);
+            });
+
+            let html = `
+                <div class="flex justify-between items-start border-b border-gray-200 pb-4 shrink-0">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">${agent}</h3>
+                        <p class="text-sm text-gray-500 mt-1">NIF: <span class="font-mono font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded">${agentNifs[agent] || 'No disponible'}</span></p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center shadow-sm">
+                        <div class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">Total Llamadas</div>
+                        <div class="text-3xl font-black text-blue-700">${totalCalls}</div>
+                    </div>
+                    <div class="bg-green-50 border border-green-100 p-4 rounded-xl text-center shadow-sm">
+                        <div class="text-green-500 text-xs font-bold uppercase tracking-wider mb-1">Días Activos (>${thresholdLimit})</div>
+                        <div class="text-3xl font-black text-green-700">${activeDays}</div>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-100 p-4 rounded-xl text-center shadow-sm">
+                        <div class="text-purple-500 text-xs font-bold uppercase tracking-wider mb-1">Promedio Diario (Activos)</div>
+                        <div class="text-3xl font-black text-purple-700">${activeDays > 0 ? (totalCalls/activeDays).toFixed(1) : 0}</div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm shrink-0">
+                    <h4 class="text-sm font-bold text-gray-700 mb-4"><i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>Evolución Diaria (Llamadas)</h4>
+                    <div class="h-48 w-full relative">
+                        <canvas id="agentChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col min-h-[250px] flex-grow">
+                    <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl shrink-0">
+                        <h4 class="text-sm font-bold text-gray-700"><i class="fa-solid fa-list-ul text-blue-400 mr-2"></i>Descripciones de Transacciones (${descs.length})</h4>
+                    </div>
+                    <div class="p-0 overflow-y-auto flex-grow bg-gray-50/50">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-white text-gray-500 text-xs uppercase sticky top-0 shadow-sm">
+                                <tr>
+                                    <th class="p-3 border-b border-gray-200 w-24 text-center">Día</th>
+                                    <th class="p-3 border-b border-gray-200">Descripción / Motivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            if (descs.length === 0) {
+                html += `<tr><td colspan="2" class="p-8 text-center text-gray-400 italic"><i class="fa-solid fa-folder-open text-2xl mb-2 block"></i>No hay descripciones registradas</td></tr>`;
+            } else {
+                descs.sort((a,b) => a.day - b.day).forEach((d, i) => {
+                    const bgClass = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    html += `<tr class="${bgClass} hover:bg-blue-50 border-b border-gray-100 transition-colors">
+                                <td class="p-3 text-center font-bold text-gray-600 border-r border-gray-100">${d.day}</td>
+                                <td class="p-3 text-gray-700 font-medium">${d.desc}</td>
+                             </tr>`;
+                });
+            }
+
+            html += `</tbody></table></div></div>`;
+            detailContainer.innerHTML = html;
+
+            if (currentChart) currentChart.destroy();
+            const ctx = document.getElementById('agentChart').getContext('2d');
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Llamadas',
+                        data: chartData,
+                        backgroundColor: chartData.map(val => val > thresholdLimit ? 'rgba(59, 130, 246, 0.8)' : 'rgba(209, 213, 219, 0.6)'), 
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { padding: 10, cornerRadius: 8 } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0, color: '#9ca3af' }, grid: { color: '#f3f4f6' }, border: { display: false } },
+                        x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 } }, border: { display: false } }
+                    },
+                    animation: { duration: 500 }
+                }
+            });
         }
     </script>
 </body>
