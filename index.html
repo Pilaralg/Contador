@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Cuadrantes de Llamadas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Importar SheetJS para leer y escribir Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Importar FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -15,119 +13,249 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
-        /* Estilos personalizados para la tabla imitando Excel */
+        /* Estilos de la tabla de cuadrante */
         .excel-table th {
-            background-color: #008080; /* Color verde azulado de tu foto */
+            background-color: #008080;
             color: white;
             border: 1px solid #005959;
             text-align: center;
             font-weight: 600;
-            padding: 8px 12px;
+            padding: 8px 10px;
             white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 20;
         }
         .excel-table td {
             border: 1px solid #d1d5db;
-            padding: 8px 12px;
+            padding: 6px 10px;
             text-align: center;
             background-color: white;
+            font-size: 0.875rem;
         }
+        .excel-table th.sticky-col,
+        .excel-table td.sticky-col {
+            position: sticky;
+            z-index: 10;
+        }
+        .excel-table th.nif-col,
+        .excel-table td.nif-col {
+            left: 0;
+            width: 100px;
+            min-width: 100px;
+        }
+        .excel-table th.agente-col,
+        .excel-table td.agente-col {
+            left: 100px;
+            width: 220px;
+            min-width: 220px;
+        }
+        .excel-table td.nif-col,
         .excel-table td.agente-col {
             background-color: #e6f2f2;
             text-align: left;
             font-weight: 500;
         }
-        .excel-table tr:nth-child(even) td:not(.agente-col):not(.nif-col) {
-            background-color: #f9fafb;
+        .excel-table tr:hover td:not(.nif-col):not(.agente-col) {
+            background-color: #f0fdf4;
+        }
+        /* Scrollbar estilizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #008080;
+            border-radius: 4px;
         }
     </style>
 </head>
-<body class="text-gray-800 h-screen flex flex-col">
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
 
-    <header class="bg-teal-700 text-white shadow-md py-4 px-6 flex items-center justify-between">
+    <header class="bg-teal-800 text-white shadow-md py-3 px-6 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-3">
-            <i class="fa-solid fa-table text-2xl"></i>
-            <h1 class="text-xl font-bold">Automatizador de Cuadrantes</h1>
+            <div class="p-2 bg-teal-700 rounded-lg">
+                <i class="fa-solid fa-table text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight">Automatizador de Cuadrantes</h1>
+                <p class="text-xs text-teal-200">Generación de informes de asistencia y llamadas</p>
+            </div>
         </div>
-        <div class="text-sm opacity-80">
-            Regla activa: ≤ 3 llamadas = "NO"
+        <div id="ruleBadge" class="hidden sm:flex items-center gap-2 bg-teal-900/60 border border-teal-600 px-3 py-1 rounded-full text-xs text-teal-100">
+            <i class="fa-solid fa-filter text-teal-300"></i>
+            <span>Regla: <strong id="currentRuleText">≤ 3 = "NO"</strong></span>
         </div>
     </header>
 
-    <main class="flex-grow p-6 overflow-auto">
-        <div class="max-w-6xl mx-auto space-y-6">
+    <div id="toast" class="hidden fixed bottom-5 right-5 flex items-center gap-3 p-4 rounded-xl shadow-xl text-white transition-all duration-300 z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-xl"></i>
+        <span id="toastMessage" class="text-sm font-medium"></span>
+    </div>
 
-            <!-- PASO 1: Subida de archivo -->
-            <div id="step-1" class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center transition-all">
-                <div class="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+    <main class="flex-grow p-4 md:p-6 overflow-y-auto">
+        <div class="max-w-7xl mx-auto space-y-6">
+
+            <div id="step-1" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 text-center transition-all max-w-4xl mx-auto my-8">
+                <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold shadow-inner">
                     1
                 </div>
-                <h2 class="text-2xl font-semibold mb-2">Sube tu archivo origen</h2>
-                <p class="text-gray-500 mb-6">Selecciona el archivo Excel (ej. <i>datos_extraidos_captura.xlsx</i>) que contiene el registro de llamadas.</p>
-                
-                <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-10 hover:bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .csv">
-                    <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-3"></i>
-                    <p class="font-medium text-gray-700">Haz clic aquí para seleccionar el archivo</p>
-                    <p class="text-sm text-gray-400 mt-1">.xlsx, .xls o .csv</p>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Sube tus archivos de datos</h2>
+                <p class="text-gray-500 mb-6 text-sm">Necesitamos el listado maestro de agentes y el histórico de llamadas.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Fichero Agentes -->
+                    <div id="dropZoneAgents" class="relative border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl p-8 hover:bg-blue-50/50 transition-all cursor-pointer group" onclick="document.getElementById('fileAgents').click()">
+                        <input type="file" id="fileAgents" class="hidden" accept=".xlsx, .xls, .csv">
+                        <div class="w-16 h-16 bg-blue-100/60 group-hover:scale-110 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform">
+                            <i class="fa-solid fa-users text-3xl"></i>
+                        </div>
+                        <p class="font-semibold text-gray-700 group-hover:text-blue-700 transition-colors">1. Fichero AGENTES</p>
+                        <p id="labelAgents" class="text-xs text-gray-400 mt-2">Haz clic aquí para seleccionar</p>
+                    </div>
+
+                    <!-- Fichero Llamadas -->
+                    <div id="dropZoneCalls" class="relative border-2 border-dashed border-amber-300 hover:border-amber-500 rounded-xl p-8 hover:bg-amber-50/50 transition-all cursor-pointer group" onclick="document.getElementById('fileCalls').click()">
+                        <input type="file" id="fileCalls" class="hidden" accept=".xlsx, .xls, .csv">
+                        <div class="w-16 h-16 bg-amber-100/60 group-hover:scale-110 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform">
+                            <i class="fa-solid fa-headset text-3xl"></i>
+                        </div>
+                        <p class="font-semibold text-gray-700 group-hover:text-amber-700 transition-colors">2. Fichero LLAMADAS</p>
+                        <p id="labelCalls" class="text-xs text-gray-400 mt-2">Haz clic aquí para seleccionar</p>
+                    </div>
                 </div>
+
+                <button id="btnProceed" onclick="processFiles()" class="px-8 py-3 bg-gray-300 text-gray-500 rounded-xl font-bold shadow-sm transition-all cursor-not-allowed w-full sm:w-auto" disabled>
+                    Siguiente Paso <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
             </div>
 
-            <!-- PASO 2: Mapeo de columnas (Oculto inicialmente) -->
-            <div id="step-2" class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 hidden transition-all">
-                <div class="flex items-center gap-4 border-b pb-4 mb-6">
-                    <div class="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-bold">2</div>
-                    <h2 class="text-xl font-semibold">Configurar Datos</h2>
-                </div>
-                
-                <p class="text-gray-600 mb-6">Indica de qué mes es el cuadrante y confirma las columnas de fechas y agentes.</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div id="step-2" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 hidden transition-all max-w-4xl mx-auto">
+                <div class="flex items-center gap-3 border-b pb-4 mb-6">
+                    <div class="w-10 h-10 bg-teal-100 text-teal-700 rounded-xl flex items-center justify-center font-bold text-lg">2</div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Mes del Cuadrante:</label>
-                        <input type="month" id="monthPicker" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:ring-teal-500 focus:border-teal-500">
+                        <h2 class="text-xl font-bold text-gray-800">Configuración del Cuadrante</h2>
+                        <p class="text-xs text-gray-500">Ajusta los parámetros y mapea las columnas del archivo</p>
+                    </div>
+                </div>
+
+                <!-- Selector de Hoja de Excel (si hay varias) -->
+                <div id="sheetSelectorContainer" class="hidden mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                    <label class="block text-sm font-semibold text-amber-900 mb-1">
+                        <i class="fa-solid fa-layer-group text-amber-600 mr-1"></i> Selecciona la Pestaña del Excel:
+                    </label>
+                    <select id="sheetSelect" class="w-full border border-amber-300 rounded-lg p-2.5 bg-white text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Mes del Cuadrante:</label>
+                        <input type="month" id="monthPicker" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Columna de Fechas:</label>
-                        <select id="dateColumn" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:ring-teal-500 focus:border-teal-500">
-                            <!-- Opciones generadas por JS -->
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Columna de Fechas (*):</label>
+                        <select id="dateColumn" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Columna de Agentes:</label>
-                        <select id="agentColumn" class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 focus:ring-teal-500 focus:border-teal-500">
-                            <!-- Opciones generadas por JS -->
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Columna Agentes (*):</label>
+                        <select id="agentColumn" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Columna NIF (Fichero Agentes):</label>
+                        <select id="nifColumn" class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
                         </select>
                     </div>
                 </div>
 
-                <div class="mt-8 flex justify-end gap-3">
-                    <button onclick="resetApp()" class="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Cancelar</button>
-                    <button onclick="processData()" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generar Tabla
+                <!-- Configuración de Reglas -->
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-teal-600"></i> Regla de Evaluación de Llamadas
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Si llamadas es menor o igual a (≤):</label>
+                            <input type="number" id="thresholdInput" value="3" min="0" max="100" class="w-full border border-gray-300 rounded-lg p-2 bg-white text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Mostrar para ≤ (ej: NO):</label>
+                            <input type="text" id="thresholdText" value="NO" class="w-full border border-gray-300 rounded-lg p-2 bg-white text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Si llamadas es mayor a (>):</label>
+                            <select id="aboveThresholdType" onchange="toggleAboveTextInput()" class="w-full border border-gray-300 rounded-lg p-2 bg-white text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                                <option value="empty" selected>Dejar celda vacía (en blanco)</option>
+                                <option value="count">Mostrar número de llamadas</option>
+                                <option value="text">Mostrar texto personalizado</option>
+                            </select>
+                        </div>
+                        <div id="aboveTextContainer" class="hidden">
+                            <label class="block text-xs text-gray-600 mb-1">Texto para > umbral:</label>
+                            <input type="text" id="aboveThresholdText" value="" placeholder="Ej: SÍ o texto libre" class="w-full border border-gray-300 rounded-lg p-2 bg-white text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2 border-t">
+                    <button onclick="resetApp()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium">
+                        Cancelar
+                    </button>
+                    <button onclick="processData()" class="px-6 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg transition-colors text-sm font-semibold shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generar Cuadrante
                     </button>
                 </div>
             </div>
 
-            <!-- PASO 3: Resultados (Oculto inicialmente) -->
-            <div id="step-3" class="bg-white rounded-xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[70vh]">
-                <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-bold">3</div>
-                        <h2 class="text-xl font-semibold">Tabla Resultado</h2>
+            <div id="step-3" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)]">
+
+                <!-- Header de Resultados y KPIs -->
+                <div class="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-wrap items-center justify-between gap-4 shrink-0">
+                    
+                    <!-- KPI Cards -->
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <div class="bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-users text-teal-600 text-sm"></i>
+                            <span class="text-xs text-gray-500">Agentes:</span>
+                            <span id="kpiAgents" class="font-bold text-sm text-gray-800">0</span>
+                        </div>
+                        <div class="bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-phone text-teal-600 text-sm"></i>
+                            <span class="text-xs text-gray-500">Llamadas Mes:</span>
+                            <span id="kpiTotalCalls" class="font-bold text-sm text-gray-800">0</span>
+                        </div>
+                        <div class="bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-check text-green-600 text-sm"></i>
+                            <span class="text-xs text-gray-500">Registros Activos:</span>
+                            <span id="kpiActiveDays" class="font-bold text-sm text-green-700">0</span>
+                        </div>
                     </div>
-                    <div class="flex gap-3">
-                        <button onclick="resetApp()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
-                            <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Empezar de nuevo
+
+                    <!-- Herramientas y Botones -->
+                    <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <div class="relative w-full sm:w-48">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar agente o NIF..." class="w-full border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-xs bg-white focus:ring-2 focus:ring-teal-500 outline-none">
+                        </div>
+
+                        <button onclick="resetApp()" class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Nuevo
                         </button>
-                        <button onclick="exportToExcel()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-                            <i class="fa-solid fa-file-arrow-down mr-1"></i> Descargar Excel
+                        <button onclick="exportToExcel()" class="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-arrow-down"></i> Descargar Excel
                         </button>
                     </div>
                 </div>
-                
-                <div class="p-0 overflow-auto flex-grow" style="background-color: #e5e5e5;">
+
+                <!-- Tabla Resultado Estilo Excel -->
+                <div class="p-0 overflow-auto flex-grow relative bg-gray-100">
                     <table id="resultTable" class="excel-table w-full border-collapse">
-                        <!-- Generado por JS -->
+                        <!-- Generado dinámicamente por JS -->
                     </table>
                 </div>
             </div>
@@ -136,95 +264,282 @@
     </main>
 
     <script>
-        let rawData = [];
-        let headers = [];
+        let rawWorkbook = null; // Calls workbook
+        let agentsWorkbook = null;
+        let agentInfo = null; // Contains metadata about agents sheet
+        let currentSheetData = [];
+        let headers = []; // Calls headers
+        let agentsHeaders = [];
+        let processedCounts = {};
+        let agentNifs = {};
+        let daysArray = [];
+        let currentMonthNum = 1;
 
-        // Referencias del DOM
-        const fileInput = document.getElementById('fileInput');
+        // --- FUNCIONES DE CRUCE INTELIGENTE (POWERSHELL LOGIC) ---
+        function normalizeText(text) {
+            if (text === null || text === undefined) return '';
+            let s = String(text).trim().toLowerCase();
+            s = s.replace(/mª/g, 'maria');
+            s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            s = s.replace(/[^a-z0-9, ]/gi, ' ');
+            return s.replace(/\s+/g, ' ').trim();
+        }
+
+        function getNameTokens(text) {
+            const s = normalizeText(text);
+            if (!s) return [];
+            const ignored = ['de', 'del', 'la', 'las', 'los', 'y'];
+            const tokens = s.replace(/,/g, ' ').split(' ').map(t => t.trim()).filter(t => t !== "" && !ignored.includes(t));
+            return [...new Set(tokens)];
+        }
+
+        function getPersonKey(text) {
+            return getNameTokens(text).join('|');
+        }
+
+        function testPersonMatch(leftKey, rightKey) {
+            if (!leftKey || !rightKey) return false;
+            const left = leftKey.split('|');
+            const right = rightKey.split('|');
+            if (Math.min(left.length, right.length) < 2) return false;
+
+            const shorter = left.length <= right.length ? left : right;
+            const longer = left.length <= right.length ? right : left;
+
+            let matchCount = 0;
+            const unmatchedShorter = [];
+            for (const token of shorter) {
+                if (longer.includes(token)) {
+                    matchCount++;
+                } else {
+                    unmatchedShorter.push(token);
+                }
+            }
+
+            if (matchCount === shorter.length) return true;
+
+            if (matchCount >= 2) {
+                const noiseNames = ['maria', 'jose', 'jesus', 'ma'];
+                if (unmatchedShorter.length > 0 && unmatchedShorter.every(t => noiseNames.includes(t))) return true;
+                const unmatchedLonger = longer.filter(t => !shorter.includes(t));
+                if (unmatchedLonger.length > 0 && unmatchedLonger.every(t => noiseNames.includes(t))) return true;
+            }
+            return false;
+        }
+
+        function findNameColumn(sheet, isAgents) {
+            const range = XLSX.utils.decode_range(sheet['!ref'] || "A1:A1");
+            const maxRow = Math.min(range.e.r, 30);
+            const maxCol = Math.min(range.e.c, 80);
+            const preferred = isAgents 
+                ? ['nombre y apellido', 'nombre', 'agente', 'empleado', 'asesor', 'operador'] 
+                : ['agente', 'nombre agente', 'usuario', 'operador', 'asesor', 'nombre'];
+
+            for (const word of preferred) {
+                for (let r = 0; r <= maxRow; r++) {
+                    for (let c = 0; c <= maxCol; c++) {
+                        const cellAddress = XLSX.utils.encode_cell({r, c});
+                        const cell = sheet[cellAddress];
+                        if (!cell || !cell.v) continue;
+                        const h = normalizeText(cell.v.toString());
+                        if (h === word || h.includes(word)) {
+                            return { row: r, col: c, name: h };
+                        }
+                    }
+                }
+            }
+            throw new Error(`No se encontró columna de nombres.`);
+        }
+
+        function findBestSheet(workbook, isAgents) {
+            for (const sheetName of workbook.SheetNames) {
+                try {
+                    const sheet = workbook.Sheets[sheetName];
+                    const found = findNameColumn(sheet, isAgents);
+                    return { sheetName: sheetName, sheet: sheet, ...found };
+                } catch (e) { }
+            }
+            throw new Error(`No se encontró hoja válida en fichero ${isAgents ? 'AGENTES' : 'LLAMADAS'}.`);
+        }
+        // --- FIN FUNCIONES DE CRUCE ---
+
+        function toggleAboveTextInput() {
+            const typeSelect = document.getElementById('aboveThresholdType');
+            const textContainer = document.getElementById('aboveTextContainer');
+            if (typeSelect.value === 'text') {
+                textContainer.classList.remove('hidden');
+            } else {
+                textContainer.classList.add('hidden');
+            }
+        }
+
+        // Referencias del DOM actualizadas
+        const fileAgents = document.getElementById('fileAgents');
+        const fileCalls = document.getElementById('fileCalls');
+        const btnProceed = document.getElementById('btnProceed');
+        const labelAgents = document.getElementById('labelAgents');
+        const labelCalls = document.getElementById('labelCalls');
+        
         const step1 = document.getElementById('step-1');
         const step2 = document.getElementById('step-2');
         const step3 = document.getElementById('step-3');
         const monthPicker = document.getElementById('monthPicker');
         const dateColumnSelect = document.getElementById('dateColumn');
         const agentColumnSelect = document.getElementById('agentColumn');
+        const nifColumnSelect = document.getElementById('nifColumn');
+        const sheetSelectorContainer = document.getElementById('sheetSelectorContainer');
+        const sheetSelect = document.getElementById('sheetSelect');
         const resultTable = document.getElementById('resultTable');
+        const thresholdInput = document.getElementById('thresholdInput');
+        const thresholdText = document.getElementById('thresholdText');
 
-        // Escuchar cuando el usuario sube un archivo
-        fileInput.addEventListener('change', handleFileUpload);
+        // Manejo de los dos archivos
+        fileAgents.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                labelAgents.textContent = e.target.files[0].name;
+                labelAgents.classList.add('text-blue-600', 'font-medium');
+                checkFilesReady();
+            }
+        });
 
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        fileCalls.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                labelCalls.textContent = e.target.files[0].name;
+                labelCalls.classList.add('text-amber-600', 'font-medium');
+                checkFilesReady();
+            }
+        });
 
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const data = evt.target.result;
-                // Leer el Excel usando SheetJS
-                const workbook = XLSX.read(data, {
-                    type: 'binary',
-                    cellDates: true, // Intentar parsear fechas reales
-                    dateNF: 'dd-mmm' // Formato parecido al de tu captura
-                });
+        function checkFilesReady() {
+            if (fileAgents.files.length > 0 && fileCalls.files.length > 0) {
+                btnProceed.disabled = false;
+                btnProceed.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btnProceed.classList.add('bg-teal-700', 'hover:bg-teal-800', 'text-white');
+            }
+        }
 
-                // Coger la primera hoja
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
+        async function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(e);
+                reader.readAsArrayBuffer(file);
+            });
+        }
 
-                // Convertir a JSON (array de arrays para ver encabezados)
-                const jsonArray = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
-                
-                if (jsonArray.length === 0) {
-                    alert("El archivo parece estar vacío.");
-                    return;
+        async function processFiles() {
+            try {
+                // Leer Agentes
+                const agentsData = await readFileAsArrayBuffer(fileAgents.files[0]);
+                agentsWorkbook = XLSX.read(agentsData, { type: 'array' });
+                agentInfo = findBestSheet(agentsWorkbook, true);
+
+                // Obtener cabeceras de agentes (para el NIF)
+                agentsHeaders = [];
+                const rangeAgents = XLSX.utils.decode_range(agentInfo.sheet['!ref']);
+                for (let c = 0; c <= rangeAgents.e.c; c++) {
+                    const cell = agentInfo.sheet[XLSX.utils.encode_cell({r: agentInfo.row, c: c})];
+                    agentsHeaders.push(cell && cell.v ? String(cell.v).trim() : '');
                 }
 
-                // Asumimos que la primera fila son los encabezados
-                headers = jsonArray[0];
-                
-                // Extraer los datos reales (cambiado a raw: true para procesar las fechas originales con precisión)
-                rawData = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+                // Leer Llamadas
+                const callsData = await readFileAsArrayBuffer(fileCalls.files[0]);
+                rawWorkbook = XLSX.read(callsData, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' });
 
-                setupMappingUI();
-            };
-            reader.readAsBinaryString(file);
+                if (rawWorkbook.SheetNames.length > 1) {
+                    sheetSelect.innerHTML = '';
+                    rawWorkbook.SheetNames.forEach(sheetName => {
+                        const opt = document.createElement('option');
+                        opt.value = sheetName;
+                        opt.textContent = sheetName;
+                        sheetSelect.appendChild(opt);
+                    });
+                    sheetSelectorContainer.classList.remove('hidden');
+                    sheetSelect.onchange = () => loadSheetData(sheetSelect.value);
+                } else {
+                    sheetSelectorContainer.classList.add('hidden');
+                }
+
+                loadSheetData(rawWorkbook.SheetNames[0]);
+            } catch (err) {
+                showToast("Error al procesar archivos: " + err.message);
+                console.error(err);
+            }
+        }
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMsg.textContent = message;
+            toast.className = `fixed bottom-5 right-5 flex items-center gap-3 p-4 rounded-xl shadow-xl text-white transition-all duration-300 z-50 ${type === 'error' ? 'bg-rose-600' : 'bg-teal-700'}`;
+            toastIcon.className = type === 'error' ? 'fa-solid fa-circle-exclamation text-xl' : 'fa-solid fa-circle-check text-xl';
+            
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 4000);
+        }
+
+        function loadSheetData(sheetName) {
+            const worksheet = rawWorkbook.Sheets[sheetName];
+            const jsonArray = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+
+            if (jsonArray.length === 0) {
+                showToast("La hoja de llamadas seleccionada está vacía.");
+                return;
+            }
+
+            headers = jsonArray[0] || [];
+            currentSheetData = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+
+            setupMappingUI();
         }
 
         function setupMappingUI() {
-            // Establecer el mes actual por defecto
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             monthPicker.value = `${year}-${month}`;
 
-            // Limpiar selects
             dateColumnSelect.innerHTML = '';
             agentColumnSelect.innerHTML = '';
+            nifColumnSelect.innerHTML = '<option value="">-- Ninguno / Generar vacío --</option>';
 
-            // Rellenar con las columnas detectadas
+            // Cabeceras de Llamadas (Fecha y Agente)
             headers.forEach(header => {
-                const option1 = document.createElement('option');
-                option1.value = header;
-                option1.textContent = header;
-                dateColumnSelect.appendChild(option1);
-
-                const option2 = document.createElement('option');
-                option2.value = header;
-                option2.textContent = header;
-                agentColumnSelect.appendChild(option2);
+                if (!header) return;
+                const hStr = String(header).trim();
+                dateColumnSelect.add(new Option(hStr, hStr));
+                agentColumnSelect.add(new Option(hStr, hStr));
             });
 
-            // Intentar autoseleccionar si contienen palabras clave
+            // Cabeceras de Agentes (NIF)
+            agentsHeaders.forEach(header => {
+                if (!header) return;
+                nifColumnSelect.add(new Option(header, header));
+            });
+
             headers.forEach((header, index) => {
+                if (!header) return;
                 const h = String(header).toLowerCase();
-                if (h.includes('fecha') || h.includes('dia') || h.includes('date')) {
+                if (h.includes('fecha') || h.includes('dia') || h.includes('date') || h.includes('time')) {
                     dateColumnSelect.selectedIndex = index;
                 }
-                if (h.includes('agente') || h.includes('nombre') || h.includes('user')) {
+                if (h.includes('agente') || h.includes('nombre') || h.includes('user') || h.includes('operador')) {
                     agentColumnSelect.selectedIndex = index;
                 }
             });
 
-            // Cambiar de vista
+            agentsHeaders.forEach((header, index) => {
+                if (!header) return;
+                const h = String(header).toLowerCase();
+                if (h.includes('nif') || h.includes('dni') || h.includes('documento') || h.includes('id')) {
+                    nifColumnSelect.value = header;
+                }
+            });
+
             step1.classList.add('hidden');
             step2.classList.remove('hidden');
         }
@@ -232,98 +547,165 @@
         function processData() {
             const dateCol = dateColumnSelect.value;
             const agentCol = agentColumnSelect.value;
+            const nifCol = nifColumnSelect.value;
             const selectedMonthStr = monthPicker.value;
 
-            if (!selectedMonthStr) {
-                alert("Por favor, selecciona el mes y año del cuadrante.");
+            if (!selectedMonthStr || !dateCol || !agentCol) {
+                showToast("Faltan campos obligatorios por seleccionar.");
                 return;
             }
 
-            if (dateCol === agentCol) {
-                alert("La columna de fechas y agentes no puede ser la misma.");
-                return;
-            }
-
-            // Analizar el mes seleccionado
             const [selYear, selMonth] = selectedMonthStr.split('-').map(Number);
-            
-            // Calcular cuántos días tiene ese mes específico
+            currentMonthNum = selMonth;
             const daysInMonth = new Date(selYear, selMonth, 0).getDate();
-            const monthDays = Array.from({length: daysInMonth}, (_, i) => i + 1);
+            daysArray = Array.from({length: daysInMonth}, (_, i) => i + 1);
 
-            // Estructura para contar: { "NombreAgente": { "1": count, "2": count... } }
-            const counts = {};
+            processedCounts = {};
+            agentNifs = {};
+            let totalCallsCount = 0;
 
-            // Función auxiliar para transformar datos extraños a Fechas JS
-            const getValidDate = (val) => {
-                if (val instanceof Date) return val;
-                if (typeof val === 'string') {
-                    const d = new Date(val);
-                    if (!isNaN(d.getTime())) return d;
-                    // Intento de parseo por si viene en formato DD/MM/YYYY
-                    const parts = val.split('/');
-                    if (parts.length === 3) {
-                        const parsed = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                        if (!isNaN(parsed.getTime())) return parsed;
+            // 1. Extraer Agentes del Fichero Maestro
+            const masterAgents = [];
+            let nifColIdx = -1;
+            
+            // Buscar índice de la columna NIF en el fichero de agentes
+            if (nifCol) {
+                nifColIdx = agentsHeaders.indexOf(nifCol);
+            }
+
+            const agentRange = XLSX.utils.decode_range(agentInfo.sheet['!ref']);
+            for (let r = agentInfo.row + 1; r <= agentRange.e.r; r++) {
+                const nameCell = agentInfo.sheet[XLSX.utils.encode_cell({r: r, c: agentInfo.col})];
+                if (nameCell && nameCell.v) {
+                    const agentName = String(nameCell.v).trim();
+                    let nifVal = '';
+                    if (nifColIdx !== -1) {
+                        const nCell = agentInfo.sheet[XLSX.utils.encode_cell({r: r, c: nifColIdx})];
+                        if (nCell && nCell.v) nifVal = String(nCell.v).trim();
+                    }
+                    
+                    masterAgents.push({
+                        name: agentName,
+                        key: getPersonKey(agentName),
+                        nif: nifVal
+                    });
+
+                    // Inicializar en 0 para todos los días
+                    processedCounts[agentName] = {};
+                    agentNifs[agentName] = nifVal;
+                }
+            }
+
+            const getValidDayNumber = (val) => {
+                if (val === null || val === undefined) return null;
+                let d = null;
+
+                if (val instanceof Date) {
+                    d = val;
+                } else if (typeof val === 'number') {
+                    // Conversión de fecha serie de Excel
+                    d = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
+                } else if (typeof val === 'string') {
+                    val = val.trim();
+                    if (!val) return null;
+                    const parsed = new Date(val);
+                    if (!isNaN(parsed.getTime())) {
+                        d = parsed;
+                    } else {
+                        // Formato DD/MM/YYYY
+                        const parts = val.split(/[\/\-\.]/);
+                        if (parts.length === 3) {
+                            const p0 = parseInt(parts[0], 10);
+                            const p1 = parseInt(parts[1], 10);
+                            const p2 = parseInt(parts[2], 10);
+                            if (p2 > 1000) d = new Date(p2, p1 - 1, p0);
+                            else if (p0 > 1000) d = new Date(p0, p1 - 1, p2);
+                        }
                     }
                 }
-                if (typeof val === 'number') {
-                    // Si viene como número de serie de Excel (por si falla el cellDates)
-                    return new Date((val - (25567 + 2)) * 86400 * 1000);
+
+                if (d && !isNaN(d.getTime())) {
+                    if (d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth) {
+                        return d.getDate();
+                    }
                 }
                 return null;
             };
 
-            // Recorrer los datos crudos y contar
-            rawData.forEach(row => {
-                let agent = row[agentCol];
+            // 2. Cruzar con el Fichero de Llamadas
+            currentSheetData.forEach(row => {
+                let callAgent = row[agentCol];
                 let dateVal = row[dateCol];
 
-                // Limpieza básica
-                if (!agent || dateVal === undefined) return; 
+                if (!callAgent || dateVal === undefined) return;
                 
-                agent = String(agent).trim();
-                const d = getValidDate(dateVal);
+                callAgent = String(callAgent).trim();
+                const day = getValidDayNumber(dateVal);
 
-                if (d) {
-                    // Solo contar si la fecha coincide con el mes y año seleccionados
-                    if (d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth) {
-                        const day = d.getDate();
-                        
-                        if (!counts[agent]) {
-                            counts[agent] = {};
-                        }
-                        
-                        if (!counts[agent][day]) {
-                            counts[agent][day] = 0;
-                        }
+                if (day !== null) {
+                    const callKey = getPersonKey(callAgent);
+                    let matchedMasterName = null;
 
-                        counts[agent][day]++;
+                    // Buscar el agente en la lista maestra
+                    for (const master of masterAgents) {
+                        if (testPersonMatch(master.key, callKey)) {
+                            matchedMasterName = master.name;
+                            break;
+                        }
+                    }
+
+                    if (matchedMasterName) {
+                        if (!processedCounts[matchedMasterName][day]) {
+                            processedCounts[matchedMasterName][day] = 0;
+                        }
+                        processedCounts[matchedMasterName][day]++;
+                        totalCallsCount++;
                     }
                 }
             });
 
-            if (Object.keys(counts).length === 0) {
-                alert(`No se encontraron llamadas para el mes seleccionado (${selectedMonthStr}). Asegúrate de haber elegido el mes correcto.`);
-                // No retornamos para que al menos dibuje la tabla en blanco si lo desean
+            const totalAgents = Object.keys(processedCounts).length;
+
+            if (totalAgents === 0) {
+                showToast(`No se encontraron agentes válidos en el listado.`, 'error');
+                return;
+            } else {
+                showToast(`Cuadrante generado cruzando llamadas para ${totalAgents} agentes.`, 'success');
             }
 
-            renderTable(counts, monthDays, selMonth);
+            const thVal = thresholdInput.value || "3";
+            const thTxt = thresholdText.value || "NO";
+            const aboveType = document.getElementById('aboveThresholdType').value;
+            const aboveTxt = document.getElementById('aboveThresholdText').value;
+
+            let ruleDesc = `≤ ${thVal} = "${thTxt}"`;
+            if (aboveType === 'count') ruleDesc += ` | > ${thVal} = Número`;
+            else if (aboveType === 'text') ruleDesc += ` | > ${thVal} = "${aboveTxt}"`;
+            else if (aboveType === 'empty') ruleDesc += ` | > ${thVal} = Vacío`;
+
+            document.getElementById('currentRuleText').textContent = ruleDesc;
+            document.getElementById('ruleBadge').classList.remove('hidden');
+
+            renderTable(daysArray, selMonth);
+            updateKPIs(totalAgents, totalCallsCount);
         }
 
-        function renderTable(counts, daysArray, monthNumber) {
-            // Nombres cortos de meses como en tu ejemplo
+        function renderTable(daysArray, monthNumber) {
             const monthNames = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
             const monthName = monthNames[monthNumber - 1];
-            
+            const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
+            const labelBelow = thresholdText.value !== "" ? thresholdText.value : "NO";
+
+            const aboveType = document.getElementById('aboveThresholdType').value;
+            const aboveText = document.getElementById('aboveThresholdText').value;
+
             let theadHTML = `
                 <thead>
                     <tr>
-                        <th class="w-24">NIF</th>
-                        <th class="w-64">AGENTE</th>
+                        <th class="sticky-col nif-col">NIF</th>
+                        <th class="sticky-col agente-col">AGENTE</th>
             `;
 
-            // Construir cabeceras de días (ej: 01-ago, 02-ago...)
             daysArray.forEach(day => {
                 const dayStr = String(day).padStart(2, '0');
                 theadHTML += `<th>${dayStr}-${monthName}</th>`;
@@ -331,32 +713,38 @@
             theadHTML += `</tr></thead>`;
 
             let tbodyHTML = `<tbody>`;
-            
-            // Ordenar agentes alfabéticamente
-            const agents = Object.keys(counts).sort();
+            const agents = Object.keys(processedCounts).sort();
 
             agents.forEach(agent => {
-                tbodyHTML += `<tr>`;
-                tbodyHTML += `<td class="nif-col bg-[#e6f2f2]"></td>`; 
-                tbodyHTML += `<td class="agente-col">${agent}</td>`;
-                
+                const nif = agentNifs[agent] || '';
+                tbodyHTML += `<tr class="agent-row">`;
+                tbodyHTML += `<td class="sticky-col nif-col font-mono text-xs text-gray-600">${nif}</td>`;
+                tbodyHTML += `<td class="sticky-col agente-col font-semibold text-gray-800">${agent}</td>`;
+
                 daysArray.forEach(day => {
-                    const count = counts[agent][day] || 0;
-                    
-                    // REGLA PRINCIPAL: Si es <= 3, poner "NO". Si no, poner cantidad.
-                    if (count <= 3) {
-                        tbodyHTML += `<td class="text-gray-400 text-sm">NO</td>`;
+                    const count = processedCounts[agent][day] || 0;
+
+                    if (count <= thresholdLimit) {
+                        tbodyHTML += `<td class="text-gray-400 text-xs font-normal">${labelBelow}</td>`;
                     } else {
-                        tbodyHTML += `<td class="font-bold text-teal-800">${count}</td>`;
+                        let displayVal = "";
+                        if (aboveType === 'count') {
+                            displayVal = count;
+                        } else if (aboveType === 'text') {
+                            displayVal = aboveText;
+                        } else if (aboveType === 'empty') {
+                            displayVal = "";
+                        }
+                        tbodyHTML += `<td class="font-bold text-teal-800 bg-teal-50/50">${displayVal}</td>`;
                     }
                 });
-                
+
                 tbodyHTML += `</tr>`;
             });
 
-            // Añadir filas en blanco extras para simular la plantilla
-            for(let i=0; i<5; i++){
-                tbodyHTML += `<tr><td class="bg-[#e6f2f2]"></td><td class="agente-col"></td>`;
+            // Filas de relleno estéticas
+            for (let i = 0; i < 4; i++) {
+                tbodyHTML += `<tr class="empty-row"><td class="sticky-col nif-col"></td><td class="sticky-col agente-col"></td>`;
                 daysArray.forEach(() => { tbodyHTML += `<td></td>`; });
                 tbodyHTML += `</tr>`;
             }
@@ -365,24 +753,122 @@
 
             resultTable.innerHTML = theadHTML + tbodyHTML;
 
-            // Cambiar de vista
             step2.classList.add('hidden');
             step3.classList.remove('hidden');
         }
 
+        function updateKPIs(totalAgents, totalCalls) {
+            const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
+            let activeDaysCount = 0;
+
+            Object.keys(processedCounts).forEach(agent => {
+                Object.keys(processedCounts[agent]).forEach(day => {
+                    if (processedCounts[agent][day] > thresholdLimit) {
+                        activeDaysCount++;
+                    }
+                });
+            });
+
+            document.getElementById('kpiAgents').textContent = totalAgents;
+            document.getElementById('kpiTotalCalls').textContent = totalCalls;
+            document.getElementById('kpiActiveDays').textContent = activeDaysCount;
+        }
+
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#resultTable tbody tr.agent-row');
+
+            rows.forEach(row => {
+                const nifCell = row.querySelector('.nif-col')?.textContent.toLowerCase() || '';
+                const agentCell = row.querySelector('.agente-col')?.textContent.toLowerCase() || '';
+
+                if (nifCell.includes(query) || agentCell.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
         function exportToExcel() {
-            // Cogemos la tabla HTML generada y la convertimos a un libro de Excel
-            const wb = XLSX.utils.table_to_book(document.getElementById('resultTable'), {sheet: "Cuadrante"});
-            
-            // Forzar descarga
-            XLSX.writeFile(wb, "Cuadrante_Llamadas_Generado.xlsx");
+            try {
+                // Hoja 1: Cuadrante de Llamadas
+                const wb = XLSX.utils.table_to_book(document.getElementById('resultTable'), { sheet: "Cuadrante" });
+                
+                // Hoja 2: Listado de Agentes y Estadísticas Generales
+                const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
+                const statsData = [
+                    ["NIF", "Agente", "Total Llamadas Mes", "Días con Llamadas (>0)", "Días Activos (> Umbral)", "Días Bajo Umbral (≤ Umbral)", "Promedio Llamadas / Día con Actividad"]
+                ];
+
+                const agents = Object.keys(processedCounts).sort();
+                agents.forEach(agent => {
+                    const nif = agentNifs[agent] || '';
+                    let totalCalls = 0;
+                    let daysWithCalls = 0;
+                    let daysAboveThreshold = 0;
+                    let daysBelowOrEqualThreshold = 0;
+
+                    daysArray.forEach(day => {
+                        const count = processedCounts[agent][day] || 0;
+                        totalCalls += count;
+                        if (count > 0) daysWithCalls++;
+                        if (count > thresholdLimit) {
+                            daysAboveThreshold++;
+                        } else {
+                            daysBelowOrEqualThreshold++;
+                        }
+                    });
+
+                    const avgPerActiveDay = daysWithCalls > 0 ? (totalCalls / daysWithCalls).toFixed(2) : 0;
+
+                    statsData.push([
+                        nif,
+                        agent,
+                        totalCalls,
+                        daysWithCalls,
+                        daysAboveThreshold,
+                        daysBelowOrEqualThreshold,
+                        Number(avgPerActiveDay)
+                    ]);
+                });
+
+                const statsSheet = XLSX.utils.aoa_to_sheet(statsData);
+                XLSX.utils.book_append_sheet(wb, statsSheet, "Estadísticas Agentes");
+
+                const selectedMonthStr = monthPicker.value || "Generado";
+                XLSX.writeFile(wb, `Cuadrante_Llamadas_${selectedMonthStr}.xlsx`);
+                showToast("Archivo Excel descargado correctamente con hoja de estadísticas.", "success");
+            } catch (e) {
+                showToast("Error al exportar a Excel.");
+                console.error(e);
+            }
         }
 
         function resetApp() {
-            fileInput.value = '';
-            rawData = [];
-            headers = [];
+            fileAgents.value = '';
+            fileCalls.value = '';
+            labelAgents.textContent = 'Haz clic aquí para seleccionar';
+            labelAgents.classList.remove('text-blue-600', 'font-medium');
+            labelCalls.textContent = 'Haz clic aquí para seleccionar';
+            labelCalls.classList.remove('text-amber-600', 'font-medium');
             
+            btnProceed.disabled = true;
+            btnProceed.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            btnProceed.classList.remove('bg-teal-700', 'hover:bg-teal-800', 'text-white');
+
+            rawWorkbook = null;
+            agentsWorkbook = null;
+            agentInfo = null;
+            currentSheetData = [];
+            headers = [];
+            agentsHeaders = [];
+            processedCounts = {};
+            agentNifs = {};
+
+            document.getElementById('searchInput').value = '';
+            document.getElementById('ruleBadge').classList.add('hidden');
+
             step3.classList.add('hidden');
             step2.classList.add('hidden');
             step1.classList.remove('hidden');
