@@ -1199,21 +1199,28 @@
                         <table class="w-full text-left border-collapse text-sm">
                             <thead class="bg-white text-gray-500 text-xs uppercase sticky top-0 shadow-sm">
                                 <tr>
-                                    <th class="p-3 border-b border-gray-200 w-24 text-center">Día</th>
+                                    <th class="p-3 border-b border-gray-200 w-24 text-center">Cantidad</th>
                                     <th class="p-3 border-b border-gray-200">Descripción / Motivo</th>
                                 </tr>
                             </thead>
                             <tbody>
             `;
 
-            if (descs.length === 0) {
+            const descCounts = {};
+            descs.forEach(d => {
+                const descText = d.desc.trim() || 'Sin descripción';
+                descCounts[descText] = (descCounts[descText] || 0) + 1;
+            });
+            const sortedDescs = Object.entries(descCounts).sort((a, b) => b[1] - a[1]);
+
+            if (sortedDescs.length === 0) {
                 html += `<tr><td colspan="2" class="p-8 text-center text-gray-400 italic"><i class="fa-solid fa-folder-open text-2xl mb-2 block"></i>No hay descripciones registradas</td></tr>`;
             } else {
-                descs.sort((a,b) => a.day - b.day).forEach((d, i) => {
+                sortedDescs.forEach(([desc, count], i) => {
                     const bgClass = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                     html += `<tr class="${bgClass} hover:bg-blue-50 border-b border-gray-100 transition-colors">
-                                <td class="p-3 text-center font-bold text-gray-600 border-r border-gray-100">${d.day}</td>
-                                <td class="p-3 text-gray-700 font-medium">${d.desc}</td>
+                                <td class="p-3 text-center font-bold text-blue-600 border-r border-gray-100 text-base">${count}</td>
+                                <td class="p-3 text-gray-700 font-medium">${desc}</td>
                              </tr>`;
                 });
             }
