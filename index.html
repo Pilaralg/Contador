@@ -312,22 +312,33 @@
                 </div>
             </div>
 
+            <!-- Paso 4: Análisis Interactivo Actualizado -->
             <div id="step-4" class="bg-white rounded-2xl shadow-sm border border-gray-200 hidden transition-all flex flex-col h-[calc(100vh-140px)] w-full">
-                <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0 w-full">
-                    <div class="flex items-center gap-4">
+                <!-- Cabecera del Análisis -->
+                <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0 w-full flex-wrap gap-4">
+                    <div class="flex items-center gap-4 flex-wrap">
                         <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> Análisis Interactivo por Agente</h2>
-                        <button onclick="exportAllAgentsStats()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel"></i> Exportar Todos
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportAllAgentsStats()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm flex items-center gap-2">
+                                <i class="fa-solid fa-file-excel"></i> Exportar Todos
+                            </button>
+                            <button onclick="exportSummary()" id="btnExportarResumen" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm flex items-center gap-2">
+                                <i class="fa-solid fa-file-excel"></i> Exportar Resumen
+                            </button>
+                        </div>
                     </div>
                     <button onclick="hideStats()" class="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold shadow-sm flex items-center gap-2">
                         <i class="fa-solid fa-arrow-left"></i> Volver al Cuadrante
                     </button>
                 </div>
-                <div class="flex flex-grow overflow-hidden w-full">
-                    <div class="w-1/3 border-r border-gray-200 bg-gray-50 p-2 overflow-y-auto" id="statsAgentList">
+
+                <!-- Paneles Flexibles -->
+                <div class="flex flex-grow overflow-hidden w-full flex-col lg:flex-row">
+                    <!-- Panel Izquierdo: Fijo -->
+                    <div class="w-full lg:w-[400px] flex-shrink-0 border-r border-gray-200 bg-gray-50 p-2 overflow-y-auto" id="statsAgentList">
                     </div>
-                    <div class="w-2/3 p-6 overflow-y-auto bg-white flex flex-col gap-6" id="statsAgentDetail">
+                    <!-- Panel Derecho: Expansivo -->
+                    <div class="flex-1 min-w-0 p-6 overflow-y-auto bg-white flex flex-col gap-6" id="statsAgentDetail">
                         <div class="text-center text-gray-400 mt-20">
                             <i class="fa-solid fa-hand-pointer text-5xl mb-4"></i>
                             <p class="text-lg">Selecciona un agente de la lista para ver su análisis y descripciones.</p>
@@ -415,9 +426,9 @@
                     <p class="mb-2">Más allá del cuadrante global, la aplicación ofrece una vista detallada individual. En la sección "Análisis Interactivo por Agente", podrás:</p>
                     <ol class="list-decimal pl-5 space-y-1 mb-4">
                         <li>Seleccionar a un agente específico de una lista lateral.</li>
-                        <li>Visualizar sus estadísticas individuales con métricas clave, gráficos circulares de porcentajes y cálculo automático del <strong>TMO (Tiempo Medio de Conversación)</strong> en formato MM:SS.</li>
+                        <li>Visualizar sus estadísticas individuales con métricas clave, gráficos circulares de porcentajes y cálculo automático del <strong>TMO (Tiempo Medio de Conversación)</strong> en segundos (formato numérico).</li>
                         <li>Revisar, ordenar y analizar los totales por cada descripción o motivo de llamada.</li>
-                        <li>Exportar tanto el estudio analítico individual detallado (en formato de matriz de columnas por cada descripción) como realizar una exportación masiva ("Exportar Todos") generando un libro Excel con una hoja independiente para cada agente.</li>
+                        <li>Exportar tanto el estudio analítico individual detallado (en formato de matriz de columnas por cada descripción) como realizar exportaciones masivas y resúmenes directos.</li>
                     </ol>
                 </div>
 
@@ -908,8 +919,7 @@
                 const parseNumericMinutes = (val) => {
                     if (val === null || val === undefined) return 0;
                     if (typeof val === 'number') {
-                        // Excel serial time fraction of a day (e.g. 0.000694 = 1 min) or raw minutes
-                        if (val < 1) return val * 1440; // Convert day fraction to minutes
+                        if (val < 1) return val * 1440; 
                         return val;
                     }
                     let s = String(val).trim();
@@ -1157,7 +1167,7 @@
                 
                 const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
                 const statsData = [
-                    ["NIF", "Agente", "Total Llamadas Mes", "Días con Llamadas (>0)", "Días Activos (> Umbral)", "Días Bajo Umbral (≤ Umbral)", "Promedio Llamadas / Día con Actividad", "TMO (Minutos Medios)"]
+                    ["NIF", "Agente", "Total Llamadas Mes", "Días con Llamadas (>0)", "Días Activos (> Umbral)", "Días Bajo Umbral (≤ Umbral)", "Promedio Llamadas / Día con Actividad", "TMO (Segundos)"]
                 ];
 
                 const agents = Object.keys(processedCounts).sort();
@@ -1181,7 +1191,8 @@
 
                     const avgPerActiveDay = daysWithCalls > 0 ? (totalCalls / daysWithCalls).toFixed(2) : 0;
                     const totalMins = agentTConv[agent] || 0;
-                    const tmoVal = totalCalls > 0 ? (totalMins / totalCalls).toFixed(2) : 0;
+                    const avgMins = totalCalls > 0 ? (totalMins / totalCalls) : 0;
+                    const tmoValSecs = Math.round(avgMins * 60);
 
                     statsData.push([
                         nif,
@@ -1191,7 +1202,7 @@
                         daysAboveThreshold,
                         daysBelowOrEqualThreshold,
                         Number(avgPerActiveDay),
-                        Number(tmoVal)
+                        tmoValSecs
                     ]);
                 });
 
@@ -1656,6 +1667,64 @@
                     console.error(e);
                 }
             }, 100);
+        }
+
+        // Nueva función para exportar el resumen en un único archivo
+        function exportSummary() {
+            const agents = Object.keys(processedCounts).sort();
+            if (agents.length === 0) {
+                showToast("No hay agentes para exportar.", "error");
+                return;
+            }
+
+            try {
+                const thresholdLimit = parseInt(thresholdInput.value, 10) || 3;
+                
+                // Cabeceras exactas a las solicitadas
+                const summaryData = [
+                    ["Nombre:", "NIF:", "Total Llamadas Mes", `Días Activos (>${thresholdLimit}):`, "Promedio Diario:", "TMO (Segundos):"]
+                ];
+
+                agents.forEach(agent => {
+                    const data = processedCounts[agent];
+                    let totalCalls = 0;
+                    let activeDays = 0;
+
+                    daysArray.forEach(day => {
+                        const count = data[day] || 0;
+                        totalCalls += count;
+                        if (count > thresholdLimit) activeDays++;
+                    });
+
+                    const nif = agentNifs[agent] || '';
+                    const avg = activeDays > 0 ? (totalCalls / activeDays).toFixed(1) : 0;
+                    
+                    const totalMinutes = agentTConv[agent] || 0;
+                    const avgMins = totalCalls > 0 ? (totalMinutes / totalCalls) : 0;
+                    const tmoValSecs = Math.round(avgMins * 60);
+
+                    summaryData.push([
+                        agent,
+                        nif,
+                        totalCalls,
+                        activeDays,
+                        Number(avg), // Number para que Excel lo detecte como cifra y formatee
+                        tmoValSecs
+                    ]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(summaryData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Resumen Agentes");
+                
+                const selectedMonthStr = document.getElementById('monthPicker').value || "Generado";
+                XLSX.writeFile(wb, `Resumen_Global_Agentes_${selectedMonthStr}.xlsx`);
+                
+                showToast("Resumen exportado correctamente.", "success");
+            } catch (error) {
+                showToast("Error al exportar el resumen.", "error");
+                console.error(error);
+            }
         }
     </script>
 </body>
